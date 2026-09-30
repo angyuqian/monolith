@@ -12,7 +12,7 @@ const SLOTS = [[0.02, 0.03], [0.98, 0.03], [0.02, 0.46], [0.98, 0.46], [0.5, 0.0
 export function initAgentOverlay(ctx) {
   const root = document.getElementById('overlay');
   const stage = document.getElementById('map-stage');
-  const agents = registry.agents();
+  const agents = registry.visibleAgents();
   root.innerHTML = `<svg class="links"></svg>
     <div class="hub" hidden><div class="hub__mark"><span style="height:10px"></span><span style="height:17px"></span><span style="height:13px"></span></div></div>
     ${agents.map((a) => `
@@ -95,6 +95,7 @@ export function initAgentOverlay(ctx) {
     layout();
   }
 
+  bus.on(EVENTS.AUDIO_LEVEL, ({ level, source }) => { if (source === 'voice') hub.style.setProperty('--voice', level.toFixed(3)); });
   ctx.map.on('move', layout);
   window.addEventListener('resize', layout);
   store.on('agents', syncCards);

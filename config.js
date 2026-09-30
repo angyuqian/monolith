@@ -47,6 +47,7 @@ export const CONFIG = {
     image: 'gemini-3.1-flash-image',   // concept renders (Nano Banana)
     omni: 'gemini-omni-1.1-flash',     // flythrough video (Interactions API)
     video: 'veo-3.1-fast-generate-preview', // alternative video path (long-running op)
+    live: 'gemini-3.8-live',           // voice copilot (Live API, native audio)
   },
 
   // When a Gemini call fails or times out, agents show canned demo output instead of an error.
@@ -57,6 +58,9 @@ export const CONFIG = {
     enabled: true,
     matchSite: false,                 // true = reuse a cached result for the same site even if design params changed
     simulatedDelayMs: [1400, 3200],   // cached results appear after a short "working" beat instead of instantly
+    // Background pre-rendering: when a site is picked or the design settles, Render Studio starts the image
+    // and flythrough immediately, so clicking Render later picks up the job already in progress.
+    prefetch: { enabled: true, video: true, settleMs: 4000 },
     prewarm: {                        // what `npm run prewarm` generates
       sites: ['site-1', 'site-6', 'site-7'],
       styles: ['dusk'],

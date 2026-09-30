@@ -8,6 +8,7 @@ export const EVENTS = {
   AGENT_OPEN: 'agent:open',             // detail: { id }  (focus an agent card in the hub)
   CHAT_POST: 'chat:post',               // detail: { role, text, agentId? }
   RESET: 'app:reset',                   // demo reset: modules clear their own UI state
+  AUDIO_LEVEL: 'audio:level',           // detail: { level 0..1, source: 'mic' | 'voice' }
 };
 
 const target = new EventTarget();

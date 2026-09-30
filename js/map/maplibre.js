@@ -61,18 +61,24 @@ export function createMapLibreAdapter(container, config) {
       setMode(next) {
         if (next === mode) return;
         mode = next;
-        if (mode === '2d') {
-          stopOrbit();
-          map.easeTo({ pitch: 0, bearing: 0, duration: 900 });
-          map.setMaxPitch(0);
-          map.dragRotate.disable();
-          map.touchZoomRotate.disableRotation();
-        } else {
-          map.setMaxPitch(75);
-          map.dragRotate.enable();
-          map.touchZoomRotate.enableRotation();
-          map.easeTo({ pitch: PITCH_3D, bearing: -18, duration: 1100 });
-        }
+        if (mode === '2d') stopOrbit();
+        // Camera change waits for any flight in progress (e.g. select site + "show it in 2D"),
+        // otherwise easeTo would cancel the fly-in halfway.
+        const applyCamera = () => {
+          if (mode === '2d') {
+            map.easeTo({ pitch: 0, bearing: 0, duration: 900 });
+            map.setMaxPitch(0);
+            map.dragRotate.disable();
+            map.touchZoomRotate.disableRotation();
+          } else {
+            map.setMaxPitch(75);
+            map.dragRotate.enable();
+            map.touchZoomRotate.enableRotation();
+            map.easeTo({ pitch: PITCH_3D, bearing: -18, duration: 1100 });
+          }
+        };
+        if (map.isMoving() && !orbiting) map.once('moveend', applyCamera);
+        else applyCamera();
         listeners.mode.forEach((fn) => fn(mode));
       },
       getMode: () => mode,
@@ -101,11 +107,15 @@ export function createMapLibreAdapter(container, config) {
       },
 
       // Snapshot without text labels / annotation lines (for image models), then restore visibility.
+      // Hidden layers are only off for ~2 frames, so it's safe to call in the background.
       async cleanSnapshot({ hide = [], maxWidth, aspect } = {}) {
+        while (map.isMoving() && !orbiting) await new Promise((r) => map.once('moveend', r));
         const ids = map.getStyle().layers.filter((l) => l.type === 'symbol' || hide.includes(l.id)).map((l) => l.id);
         const prev = ids.map((id) => [id, map.getLayoutProperty(id, 'visibility') || 'visible']);
         ids.forEach((id) => map.setLayoutProperty(id, 'visibility', 'none'));
-        await new Promise((r) => { map.once('idle', r); setTimeout(r, 2500); });
+        const frame = () => new Promise((r) => { map.once('render', r); map.triggerRepaint(); setTimeout(r, 400); });
+        await frame();
+        await frame();
         const shot = adapter.snapshot({ maxWidth, aspect });
         prev.forEach(([id, v]) => map.setLayoutProperty(id, 'visibility', v));
         return shot;

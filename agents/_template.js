@@ -21,9 +21,14 @@ export default {
   stage: 'review',                // 'site' | 'design' | 'review' — where it belongs in the workflow
   description: 'One line explaining what this agent does.',
   manualOnly: false,              // true = skipped by "Run all agents"
+  hidden: false,                  // true = no hub card / constellation node (agent owns its UI elsewhere, see voice.js)
   cache: true,                    // false = never serve/save cached results (e.g. live data)
   cacheScope: 'site',             // 'global' if the result doesn't depend on the selected site
   cacheVariant: (ctx, opts) => 'run', // distinguish outputs of one agent, e.g. `image:${opts.style}`
+
+  // Optional: called once at boot, for UI outside the card. Slots: ctx.ui.slots.command (command bar), ctx.ui.slots.stage (map).
+  // ctx.orchestrator exposes tools() / system / state() so other front-ends can drive the same actions.
+  init(ctx) {},
 
   // Optional: render custom controls into the agent's card (buttons, selects…). Called once.
   mount(el, ctx) {

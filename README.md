@@ -15,6 +15,8 @@ To deploy, upload the folder to any static host (Firebase Hosting, GitHub Pages,
 
 **Demo flow.** Click **Site A**, then **Design on this site →**, then drag the sliders, press **T** for 2D/3D, go to **03 Review** and hit **Run all agents**. Or type in the top bar, e.g. *"find the best 60 MW site in the west, away from housing"*.
 
+**Talk to it.** Tap the 🎙 mic in the command bar, or hold **Space**, and say e.g. *"take me to the Loyang site and show it in 2D"* or *"make it 80 megawatts and run the compliance check"*. Voice Copilot uses **Gemini Live** (`gemini-3.8-live`, native audio). It uses the same actions as the chat, so the map moves while it answers out loud. Live captions appear over the map, and everything is logged in the chat. The ▾ next to the mic chooses the voice and turns spoken replies on or off. The first use asks for microphone permission; use Chrome, and allow the mic.
+
 **Reset between runs.** Press **↺ Reset** in the top bar (or `Shift+R`). It clears the site, design, agent results and chat, and flies back to the island view, with no reload. Cached renders are kept.
 
 **Shortcuts:**
@@ -28,6 +30,7 @@ To deploy, upload the folder to any static host (Firebase Hosting, GitHub Pages,
 | `1` `2` `3` | stages |
 | `⌘K` | command bar |
 | `Shift+R` | reset demo |
+| hold `Space` | talk to Voice Copilot |
 
 ## Render and agent cache
 
@@ -40,6 +43,11 @@ Omni flythroughs take about 75 s and Nano Banana renders about 20 s. For the reh
 3. **Live Gemini call.** The result is then saved to the browser cache.
 
 **What counts as a match:** agent + variant (such as `image:dusk` or `comms:community`) + site + the exact design parameters. If you move a slider, it's a fresh live generation. To reuse per-site results even after changing the design, set `CONFIG.CACHE.matchSite = true`.
+
+**Background pre-rendering:** when a site is picked, or the design stops changing for 4 s, Render Studio quietly starts the concept image and the Omni flythrough. Clicking Render (or asking by voice or chat) picks up that job instead of starting a new one, so after a minute of talking about a design, its renders are usually ready.
+- At most one image and one video are generated at a time; if the design keeps changing, only the latest request waits.
+- It only runs in 3D view.
+- Turn it off with `CONFIG.CACHE.prefetch.enabled = false`, or set `video: false` to pre-render images only.
 
 **How it looks:** cached results appear after a short "working" beat (`CACHE.simulatedDelayMs`) and carry a small `· cached` tag in the agent card.
 
@@ -99,6 +107,7 @@ In devtools, everything is exposed on `window.monolith`, e.g. `monolith.actions.
 |---|---|---|
 | Omni flythroughs | `agents/render.js` → `flythrough()` | Omni runs through the **Interactions API** and returns an inline mp4 (~10 s long, ~75 s to generate). Snapshots are centre-cropped to 16:9 so the output is landscape. |
 | Compliance | `agents/compliance.js` | Deterministic checks + Gemini explanation. Plug real URA/NEA rule sources into `localChecks()`. |
+| Voice | `agents/voice.js` | Live API WebSocket from the browser; reuses `ctx.orchestrator.tools()`. Replies ~0.4 s after you stop talking. |
 | Comms | `agents/comms.js` | Brief / letter / press / investor drafts. Add channels (Gmail, Docs, Slack), translation, TTS. |
 | Site selection | `agents/siteScout.js`, `scripts/prep_data.py` | Scoring weights live in `prep_data.py` (land 35%, power 25%, fibre 20%, community 20%). |
 

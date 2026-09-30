@@ -82,7 +82,10 @@ async function boot() {
     store, bus, registry, gemini, actions, cache,
     map: adapter,
     massing: computeMassing,
-    ui: { toast, lightbox, ask: () => {} },
+    ui: {
+      toast, lightbox, ask: () => {},
+      slots: { command: document.getElementById('command-slot'), stage: document.getElementById('map-stage') },
+    },
     getSite: () => store.get().site,
     getDesign: () => store.get().design,
     snapshot: (opts) => adapter.snapshot(opts),
@@ -92,6 +95,7 @@ async function boot() {
   status('Waking up agents…');
   await loadAgents();
   const orchestrator = createOrchestrator(() => ctx);
+  ctx.orchestrator = orchestrator;
 
   addSiteMarkers(adapter, sites, (site) => actions.selectSite(site));
   initShell(ctx);
@@ -99,6 +103,8 @@ async function boot() {
   initLeftPanel(ctx);
   initAgentHub(ctx, orchestrator);
   initAgentOverlay(ctx);
+  // agents that add UI outside their hub card (e.g. the voice mic in the command bar)
+  registry.agents().forEach((a) => { try { a.init?.(ctx); } catch (e) { console.error(`[agent:${a.id}] init failed`, e); } });
   initClickRouter(adapter, actions);
 
   const syncMap = () => {

@@ -85,8 +85,8 @@ function coreTools(ctx) {
     },
     {
       name: 'run_agent',
-      description: `Run a specialist agent and return its result. Agents: ${registry.agents().map((a) => `${a.id} (${a.description})`).join('; ')}.`,
-      parameters: { type: 'object', properties: { agent_id: { type: 'string', enum: registry.agents().map((a) => a.id) } }, required: ['agent_id'] },
+      description: `Run a specialist agent and return its result. Agents: ${registry.agents().filter((a) => a.run).map((a) => `${a.id} (${a.description})`).join('; ')}.`,
+      parameters: { type: 'object', properties: { agent_id: { type: 'string', enum: registry.agents().filter((a) => a.run).map((a) => a.id) } }, required: ['agent_id'] },
       handler: async ({ agent_id }) => {
         const r = await actions.runAgent(agent_id);
         return r ? { status: r.status, summary: r.summary } : { error: 'unknown agent' };
@@ -165,7 +165,7 @@ export function createOrchestrator(getCtx) {
     if (/\b3d\b/.test(t)) { await run('set_view_mode', { mode: '3d' }); return 'Switched to 3D.'; }
     const mw = t.match(/(\d+)\s*mw/);
     if (mw && store.get().site) { await run('set_design_params', { itMW: +mw[1] }); return `Updated the design to ${mw[1]} MW.`; }
-    for (const a of registry.agents()) {
+    for (const a of registry.agents().filter((x) => x.run)) {
       if (t.includes(a.id) || t.includes(a.name.toLowerCase())) { await run('run_agent', { agent_id: a.id }); return `Ran the ${a.name} agent.`; }
     }
     const regions = { jurong: 'Clementi', west: 'Clementi', east: 'Loyang', changi: 'Loyang', loyang: 'Loyang', ubi: 'Ubi', paya: 'Ubi', kaki: 'Kaki' };
@@ -178,5 +178,6 @@ export function createOrchestrator(getCtx) {
     return 'Gemini is unreachable right now — try “site A”, “2D”, “60 MW” or an agent name.';
   }
 
-  return { send, reset: () => { history.length = 0; generation++; } };
+  // tools/system/state are shared with other front-ends (e.g. agents/voice.js) so every input drives the same actions
+  return { send, reset: () => { history.length = 0; generation++; }, tools: allTools, system: SYSTEM, state: summariseState };
 }

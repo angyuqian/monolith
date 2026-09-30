@@ -15,7 +15,7 @@ const SUGGESTIONS = [
 
 export function initAgentHub(ctx, orchestrator) {
   const el = document.getElementById('right-panel');
-  const agents = registry.agents();
+  const agents = registry.visibleAgents();
   el.innerHTML = `
     <div class="hub-head">
       <div class="hub-head__mark">✦</div>

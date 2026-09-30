@@ -5,4 +5,5 @@ export const AGENTS = [
   'render.js',
   'compliance.js',
   'comms.js',
+  'voice.js',
 ];

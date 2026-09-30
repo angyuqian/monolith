@@ -135,7 +135,7 @@ export function initLeftPanel(ctx) {
 
   // ---------- 03 Review ----------
   function reviewView(s) {
-    const agents = registry.agents();
+    const agents = registry.visibleAgents();
     const m = s.design?.metrics;
     return `
       ${head('03', 'Review', 'Agent review', 'Specialist agents check, render and communicate the proposal.')}

@@ -79,10 +79,11 @@ export function createActions(adapter, getCtx) {
       if (site && !store.get().constellation) store.set({ constellation: true });
       bus.emit(EVENTS.AGENT_STARTED, { id });
       const epoch = resetEpoch;
+      const asked = Date.now();
       let result = await cache.get(keys);
       if (result) {
         const [lo, hi] = CONFIG.CACHE?.simulatedDelayMs || [0, 0];
-        await sleep(lo + Math.random() * (hi - lo));
+        await sleep(Math.max(0, lo + Math.random() * (hi - lo) - (Date.now() - asked)));
         result.cached = true;
       }
       if (!result) {

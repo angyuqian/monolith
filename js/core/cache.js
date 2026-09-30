@@ -14,6 +14,7 @@ let manifest = { version: 1, entries: {} };
 const projectBySite = new Map(); // siteKey -> exact key
 const session = [];              // entries written this page session (exported by the prewarm script)
 const pending = new Set();       // in-flight puts
+const inflight = new Map();      // exact key -> Promise<result> (background pre-generation)
 let dbp = null;
 
 function hash(obj) {
@@ -95,6 +96,10 @@ export const cache = {
     if (!opts.read || !keys) return null;
     const exact = fromProject(keys.key) || fromRecord(await idb('readonly', (s) => s.get(keys.key)));
     if (exact) return exact;
+    if (inflight.has(keys.key)) { // being generated in the background: wait for it instead of starting again
+      const r = await inflight.get(keys.key).catch(() => null);
+      if (r) return { ...structuredClone({ ...r, media: undefined }), media: r.media, prefetched: true };
+    }
     if (!CONFIG.CACHE?.matchSite) return null;
     const pk = projectBySite.get(keys.siteKey);
     if (pk) return fromProject(pk);
@@ -120,6 +125,16 @@ export const cache = {
     session.push(rec);
     await idb('readwrite', (s) => s.put(rec));
   },
+
+  // Register a background generation; its result is saved like any other and served to whoever asks.
+  track(keys, promise) {
+    if (!keys) return promise;
+    inflight.set(keys.key, promise);
+    promise.then((r) => cache.put(keys, r)).catch(() => {}).finally(() => inflight.delete(keys.key));
+    return promise;
+  },
+  isInflight: (keys) => !!keys && inflight.has(keys.key),
+  readsEnabled: () => opts.read,
 
   async clearBrowser() {
     await idb('readwrite', (s) => s.clear());

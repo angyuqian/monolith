@@ -373,6 +373,136 @@
         "type": "video",
         "file": "render-video-dusk-site-7-dsp7no.mp4"
       }
+    },
+    "render|image:dusk|site-2|dsp7no": {
+      "siteKey": "render|image:dusk|site-2",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.333Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-2-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-2|dsp7no": {
+      "siteKey": "render|video:dusk|site-2",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.335Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-2-dsp7no.mp4"
+      }
+    },
+    "render|image:dusk|site-3|dsp7no": {
+      "siteKey": "render|image:dusk|site-3",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.338Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-3-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-3|dsp7no": {
+      "siteKey": "render|video:dusk|site-3",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.339Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-3-dsp7no.mp4"
+      }
+    },
+    "render|image:dusk|site-4|dsp7no": {
+      "siteKey": "render|image:dusk|site-4",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.345Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-4-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-4|dsp7no": {
+      "siteKey": "render|video:dusk|site-4",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.345Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-4-dsp7no.mp4"
+      }
+    },
+    "render|image:dusk|site-5|dsp7no": {
+      "siteKey": "render|image:dusk|site-5",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.350Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-5-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-5|dsp7no": {
+      "siteKey": "render|video:dusk|site-5",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.354Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-5-dsp7no.mp4"
+      }
+    },
+    "render|image:dusk|site-8|dsp7no": {
+      "siteKey": "render|image:dusk|site-8",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.358Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-8-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-8|dsp7no": {
+      "siteKey": "render|video:dusk|site-8",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T09:40:12.359Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-8-dsp7no.mp4"
+      }
     }
   }
 }

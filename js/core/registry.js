@@ -12,6 +12,8 @@ export const registry = {
     tools.set(tool.name, tool);
   },
   agents: () => [...agents.values()],
+  // agents with a card in the hub / constellation (hidden: true agents own their UI elsewhere, e.g. voice)
+  visibleAgents: () => [...agents.values()].filter((a) => !a.hidden),
   agent: (id) => agents.get(id),
   tools: () => [...tools.values()],
   tool: (name) => tools.get(name),
