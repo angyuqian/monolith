@@ -42,6 +42,12 @@ export const CONFIG = {
   // Leave empty to hide the Photoreal 3D view. The Gemini key does NOT work for Maps.
   GOOGLE_MAPS_KEY: local.GOOGLE_MAPS_KEY || '',
 
+  // Comms email pipeline. Real recipients belong in config.local.js (not committed); these are neutral defaults.
+  COMMS: {
+    recipient: { name: 'Investor', org: 'Investment firm', email: '', ...(local.COMMS?.recipient || {}) },
+    sender: local.COMMS?.sender || 'The Monolith team',
+  },
+
   MODELS: {
     text: 'gemini-3.8-flash',          // orchestrator, agents (generateContent)
     image: 'gemini-3.1-flash-image',   // concept renders (Nano Banana)
@@ -64,7 +70,7 @@ export const CONFIG = {
     prewarm: {                        // what `npm run prewarm` generates
       sites: ['site-1', 'site-6', 'site-7'],
       styles: ['dusk'],
-      comms: ['brief', 'community'],
+      comms: ['brief', 'community', 'investor'],
       video: true,
     },
   },

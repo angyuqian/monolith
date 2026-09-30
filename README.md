@@ -17,6 +17,13 @@ To deploy, upload the folder to any static host (Firebase Hosting, GitHub Pages,
 
 **Talk to it.** Tap the 🎙 mic in the command bar, or hold **Space**, and say e.g. *"take me to the Loyang site and show it in 2D"* or *"make it 80 megawatts and run the compliance check"*. Voice Copilot uses **Gemini Live** (`gemini-3.8-live`, native audio). It uses the same actions as the chat, so the map moves while it answers out loud. Live captions appear over the map, and everything is logged in the chat. The ▾ next to the mic chooses the voice and turns spoken replies on or off. The first use asks for microphone permission; use Chrome, and allow the mic.
 
+**Email the investor memo.** In Comms, choose **Investor memo (email)** and press Draft, or say or type *"email the investor memo"*.
+- Gemini drafts the subject line and memo from the project data.
+- A compose window opens with the concept render, flythrough and compliance summary attached.
+- **You** press Send. Sending is simulated, with Undo, and nothing leaves the app. **Open in Gmail ↗** hands the draft to a real Gmail compose tab instead.
+- The recipient is set in `config.local.js` under `COMMS.recipient`, so real addresses never reach the repo.
+- Cached drafts use `{{first_name}}` / `{{org}}` placeholders, filled in at display time.
+
 **Reset between runs.** Press **↺ Reset** in the top bar (or `Shift+R`). It clears the site, design, agent results and chat, and flies back to the island view, with no reload. Cached renders are kept.
 
 **Shortcuts:**

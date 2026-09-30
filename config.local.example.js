@@ -2,4 +2,8 @@
 export default {
   GEMINI_KEY: '',       // AI Studio key for generativelanguage.googleapis.com
   GOOGLE_MAPS_KEY: '',  // optional "AIza..." key: enables the Photoreal 3D view
+  COMMS: {
+    recipient: { name: 'Jane Doe', org: 'Example Capital', email: 'jane@example.com' }, // investor memo email
+    sender: 'The Monolith team',
+  },
 };

@@ -126,6 +126,12 @@ export const cache = {
     await idb('readwrite', (s) => s.put(rec));
   },
 
+  // Cached result only (project or browser) — never waits for an in-flight job.
+  async peek(keys) {
+    if (!opts.read || !keys) return null;
+    return fromProject(keys.key) || fromRecord(await idb('readonly', (s) => s.get(keys.key)));
+  },
+
   // Register a background generation; its result is saved like any other and served to whoever asks.
   track(keys, promise) {
     if (!keys) return promise;

@@ -503,6 +503,45 @@
         "type": "video",
         "file": "render-video-dusk-site-8-dsp7no.mp4"
       }
+    },
+    "comms|comms:investor|site-1|dsp7no": {
+      "siteKey": "comms|comms:investor|site-1",
+      "result": {
+        "status": "info",
+        "summary": "Investor memo drafted for Ubi Road 1 — ready to email.",
+        "data": {
+          "type": "investor",
+          "subject": "60 MW Hyperscale Data Centre Investment Opportunity · Ubi Road 1, Singapore",
+          "text": "Hi {{first_name}},\n\nI am reaching out to present an institutional investment opportunity in a premier hyperscale data centre development at Ubi Road 1, Singapore.\n\n* **IT Capacity:** 60 MW IT capacity (70.8 MW facility load) across 15,000 m² white space\n* **Estimated Capex:** USD 750M\n* **Design Efficiency:** 1.18 PUE with liquid cooling and N+1 redundancy\n* **Site Suitability Score:** 95.1\n* **Grid & Infrastructure Proximity:** 476m to Paya Lebar 400kV Substation and 185m to Vertex Block B\n\nWith Singapore's DC-CFA capacity allocation exceptionally scarce and strictly efficiency-gated, this project's low PUE profile ensures immediate competitive differentiation. \n\nAre you available for a 30-minute call next week to explore this for {{org}}? I have attached our concept render, flythrough, and compliance summary for your review.\n\nBest regards,\n{{sender}}"
+        }
+      },
+      "createdAt": "2026-09-30T09:54:33.531Z"
+    },
+    "comms|comms:investor|site-6|dsp7no": {
+      "siteKey": "comms|comms:investor|site-6",
+      "result": {
+        "status": "info",
+        "summary": "Investor memo drafted for International Business Park — ready to email.",
+        "data": {
+          "type": "investor",
+          "subject": "60MW Hyperscale Data Centre Opportunity | International Business Park, Singapore",
+          "text": "Hi {{first_name}},\n\nI am pleased to share an institutional investment opportunity for a new hyperscale data centre development at International Business Park, Singapore.\n\nKey project metrics:\n- **IT Capacity:** 60 MW\n- **Estimated Capex:** USD 750m\n- **Design PUE:** 1.18\n- **Site Suitability Score:** 80.6\n- **Grid & Fibre Proximity:** 2,249m to Clementi Substation and 108m to Jurong Data Center\n- **Compliance Status:** Designed to meet stringent DC-CFA criteria, delivering a 0.2 WUE with liquid cooling\n\nSingapore's DC-CFA capacity allocation remains exceptionally scarce and efficiency-gated, making sustainable, high-density developments of this scale rare in the market.\n\nWould you be open to a 30-minute call next week to discuss this opportunity for {{org}}? For your review, I have attached our concept render, flythrough, and compliance summary.\n\nBest regards,\n{{sender}}"
+        }
+      },
+      "createdAt": "2026-09-30T09:54:33.531Z"
+    },
+    "comms|comms:investor|site-7|dsp7no": {
+      "siteKey": "comms|comms:investor|site-7",
+      "result": {
+        "status": "info",
+        "summary": "Investor memo drafted for Loyang Way — ready to email.",
+        "data": {
+          "type": "investor",
+          "subject": "Investment Opportunity: 60MW Hyperscale Data Centre, Loyang Way, Singapore",
+          "text": "Hi {{first_name}},\n\nI am reaching out to share a prime investment opportunity for {{org}} in a new 60MW hyperscale data centre development located at Loyang Way, Singapore.\n\n- **IT Capacity:** 60 MW IT load\n- **Estimated Capex:** USD 750M\n- **Design PUE:** 1.18\n- **Site Suitability Score:** 80.5\n- **Grid & Network Proximity:** 1,887m to Pasir Ris 66kV Substation and 458m to STT GDC Loyang\n- **Compliance Status:** Engineered in full alignment with national green benchmarks\n\nWith Singapore's DC-CFA capacity allocation exceptionally scarce and strictly efficiency-gated, this site provides rare, high-efficiency scale in an intensely supply-constrained market.\n\nWould you be open to a 30-minute call next week to explore this? Please find the attached concept render, flythrough, and compliance summary for your review.\n\nBest regards,\n{{sender}}"
+        }
+      },
+      "createdAt": "2026-09-30T09:54:33.531Z"
     }
   }
 }
