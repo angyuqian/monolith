@@ -93,7 +93,7 @@ Gemini acts on the app through tools: list sites, select a site, fly the camera,
 - An email-style compose window opens with the memo and the concept render, flythrough and compliance summary attached.
 - **You press Send.** Sending is **simulated**, with a Gmail-like Undo, and nothing leaves the app.
 - **Open in Gmail ↗** opens a real Gmail draft instead, for you to send yourself.
-- The recipient comes from `config.local.js` (`COMMS.recipient`), so real addresses never reach the repo.
+- It's addressed to a generic **Investment Team &lt;investors@example.com&gt;** (`COMMS.recipient` in `config.js`). `example.com` is a reserved placeholder domain, so nothing can reach a real inbox.
 
 ### Multiplayer mode (mock)
 - Click the **avatar row** in the top bar, or press **M**, to show Figma/Miro-style live cursors.
@@ -305,7 +305,7 @@ These are **indicative figures for a demo**, not engineering advice.
 | Compliance, stakeholder brief, community letter, investor memo | ⏳ live, ~6–11 s each | ✅ sites A, D, F, G |
 | Site Scout ranking | ⏳ live, ~7 s | ✅ |
 | Chat and voice | always live | always live |
-| Investor email recipient | generic "Investor" | from `config.local.js` |
+| Investor email recipient | generic Investment Team | generic Investment Team |
 
 Anything generated live is saved in that browser (IndexedDB), so repeating the same site and design is instant afterwards, on any machine.
 
@@ -355,7 +355,7 @@ export default {
   GEMINI_KEY: '',          // AI Studio key
   GOOGLE_MAPS_KEY: '',     // optional "AIza…" key: enables the Photoreal 3D button
   COMMS: {
-    recipient: { name: 'Jane Doe', org: 'Example Capital', email: 'jane@example.com' },
+    recipient: { name: 'Investment Team', greeting: 'Investment Team', org: 'your fund', email: 'investors@example.com' },
     sender: 'The Monolith team',
   },
 };

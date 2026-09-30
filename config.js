@@ -48,9 +48,9 @@ export const CONFIG = {
   // Leave empty to hide the Photoreal 3D view. The Gemini key does NOT work for Maps.
   GOOGLE_MAPS_KEY: local.GOOGLE_MAPS_KEY || '',
 
-  // Comms email pipeline. Real recipients belong in config.local.js (not committed); these are neutral defaults.
+  // Comms email pipeline: a generic investor recipient (example.com is a reserved placeholder domain).
   COMMS: {
-    recipient: { name: 'Investor', org: 'Investment firm', email: '', ...(local.COMMS?.recipient || {}) },
+    recipient: { name: 'Investment Team', greeting: 'Investment Team', org: 'your fund', email: 'investors@example.com', ...(local.COMMS?.recipient || {}) },
     sender: local.COMMS?.sender || 'The Monolith team',
   },
 

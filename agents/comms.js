@@ -27,13 +27,13 @@ const EMAIL_SCHEMA = {
   required: ['subject', 'body'],
 };
 
-const recipient = () => CONFIG.COMMS?.recipient || { name: 'Investor', org: 'Investment firm', email: '' };
+const recipient = () => CONFIG.COMMS?.recipient || { name: 'Investment Team', greeting: 'Investment Team', org: 'your fund', email: 'investors@example.com' };
 
 // {{first_name}} / {{name}} / {{org}} / {{sender}} -> configured values
 function fill(text) {
   const r = recipient();
   return String(text || '')
-    .replaceAll('{{first_name}}', r.name.split(/\s+/)[0])
+    .replaceAll('{{first_name}}', r.greeting || r.name.split(/\s+/)[0])
     .replaceAll('{{name}}', r.name)
     .replaceAll('{{org}}', r.org)
     .replaceAll('{{sender}}', CONFIG.COMMS?.sender || 'The Monolith team');
@@ -84,7 +84,7 @@ async function composeInvestorEmail(ctx, result) {
     attachments: await gatherAttachments(ctx),
     onSent: (draft) => ctx.actions.runTask('comms', async () => ({
       status: 'pass',
-      summary: `Investor memo sent to ${r.name} (${r.org}).`,
+      summary: `Investor memo sent to ${r.name}${r.email ? ` <${r.email}>` : ''}.`,
       data: { ...result.data, subject: draft.subject, sentText: draft.bodyText, sent: true, sentAt: Date.now() },
     }), null, { cache: false }),
   });
