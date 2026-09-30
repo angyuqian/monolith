@@ -1,158 +1,397 @@
 # Monolith: Data Centre Studio
 
-Find a site in Singapore, design a hyperscale data centre on it, and hand the proposal to AI agents for compliance checks, renders and stakeholder comms.
+Monolith finds a site in Singapore for a hyperscale data centre, designs the building on it, and hands the proposal to a team of AI agents. The agents check compliance, render photoreal images and flythrough videos, and draft stakeholder and investor communications. You drive it by clicking, typing, or talking.
 
-It's static HTML/CSS/JS with no build step and no backend. It runs on MapLibre with OpenFreeMap tiles and 118k OSM buildings. The AI side is Gemini 3.8 Flash (orchestrator and agents), Nano Banana (`gemini-3.1-flash-image`) for concept renders, and Gemini Omni for flythrough videos.
+- **No build step, no backend.** It's static HTML/CSS/JS that runs in the browser.
+- **Map:** MapLibre GL with OpenFreeMap tiles, plus 118,782 Singapore buildings from OpenStreetMap.
+- **AI:** Google Gemini, called directly from the browser:
 
-## Run it
+| Job | Model |
+|---|---|
+| Chat orchestrator and agents | `gemini-3.8-flash` |
+| Concept renders ("Nano Banana") | `gemini-3.1-flash-image` |
+| Flythrough videos, via the Interactions API | `gemini-omni-1.1-flash` |
+| Voice, via the Live API | `gemini-3.8-live` |
+
+---
+
+## Contents
+
+1. [Quick start](#quick-start)
+2. [Feature tour](#feature-tour)
+3. [Suggested 3-minute demo](#suggested-3-minute-demo)
+4. [Controls](#controls)
+5. [Architecture](#architecture)
+6. [Agents](#agents)
+7. [Add your own agent](#add-your-own-agent)
+8. [Data and scoring](#data-and-scoring)
+9. [Design model and assumptions](#design-model-and-assumptions)
+10. [Speed: caching and pre-rendering](#speed-caching-and-pre-rendering)
+11. [Configuration](#configuration)
+12. [Deploying](#deploying)
+13. [Troubleshooting](#troubleshooting)
+14. [Known limitations](#known-limitations)
+15. [Project layout](#project-layout)
+
+---
+
+## Quick start
 
 ```bash
-python3 -m http.server 8000     # any static server works
-open http://localhost:8000
+git clone https://github.com/angyuqian/monolith.git && cd monolith
+cp config.local.example.js config.local.js   # paste your Gemini API key into GEMINI_KEY
+npm start                                    # = python3 -m http.server 8000 (any static server works)
 ```
 
-To deploy, upload the folder to any static host (Firebase Hosting, GitHub Pages, Cloud Storage).
+Open **http://localhost:8000 in Chrome**. Chrome is recommended for voice and video. The first load takes about 7 s while it loads the city model.
 
-**Demo flow.** Click **Site A**, then **Design on this site →**, then drag the sliders, press **T** for 2D/3D, go to **03 Review** and hit **Run all agents**. Or type in the top bar, e.g. *"find the best 60 MW site in the west, away from housing"*.
+- **Gemini key:** use an AI Studio key for `generativelanguage.googleapis.com`. It stays in `config.local.js`, which is gitignored.
+- **No key?** The app still runs. Map, design and metrics work fully, and AI features show canned demo output instead of failing.
+- **`npm install`** is only needed if you want to pre-generate renders (see [caching](#speed-caching-and-pre-rendering)).
 
-**Talk to it.** Tap the 🎙 mic in the command bar, or hold **Space**, and say e.g. *"take me to the Loyang site and show it in 2D"* or *"make it 80 megawatts and run the compliance check"*. Voice Copilot uses **Gemini Live** (`gemini-3.8-live`, native audio). It uses the same actions as the chat, so the map moves while it answers out loud. Live captions appear over the map, and everything is logged in the chat. The ▾ next to the mic chooses the voice and turns spoken replies on or off. The first use asks for microphone permission; use Chrome, and allow the mic.
+---
 
-**Email the investor memo.** In Comms, choose **Investor memo (email)** and press Draft, or say or type *"email the investor memo"*.
-- Gemini drafts the subject line and memo from the project data.
-- A compose window opens with the concept render, flythrough and compliance summary attached.
-- **You** press Send. Sending is simulated, with Undo, and nothing leaves the app. **Open in Gmail ↗** hands the draft to a real Gmail compose tab instead.
-- The recipient is set in `config.local.js` under `COMMS.recipient`, so real addresses never reach the repo.
-- Cached drafts use `{{first_name}}` / `{{org}}` placeholders, filled in at display time.
+## Feature tour
 
-**Multiplayer mode (mock).** Click the avatar row in the top bar, or press **M**, to switch on live collaborator cursors, Figma/Miro-style.
-- Agents appear as named cursors while they run:
-  - Site Scout hops between candidate sites.
-  - Compliance traces the parcel and drops comment pins.
-  - Render Studio draws a framing box around the massing.
+The workflow has three stages: **01 Site → 02 Design → 03 Review**. Switch between them with the top bar or the keys `1` `2` `3`.
+
+### 01 Site: find a site
+- **Suitability grid:** orange 250 m cells scored 0–100 across the island. Darker means a better fit.
+- **Eight candidate sites (A–H):** the top-scoring locations at least 1.5 km apart, each with a score breakdown covering industrial land, grid power, fibre / DC cluster and community buffer.
+- **Choose a site** by clicking a lettered pin, clicking any grid cell, picking from the list, or asking Monolith.
+- **Infrastructure layers:** existing data centres (coral) and grid substations (purple). Open the **Layers** panel with `L`.
+- **✦ Rank with AI:** Site Scout ranks and explains the candidates.
+
+### 02 Design: parametric massing
+- Selecting a site generates a data-centre campus on it: data halls, an office, a substation, a generator yard, rooftop cooling, and a dimensioned parcel.
+- **Sliders** control IT load (MW), halls, storeys, cooling (liquid or air), redundancy (N+1 or 2N), and parcel size and rotation. The massing and the metrics update live.
+- **Metrics:** IT capacity, design PUE, white space, racks, GFA, height, plot ratio, gensets, energy, water, carbon and capex, plus warnings when the programme doesn't fit.
+- Existing buildings on the parcel are flattened.
+- **2D/3D:** press `T` to switch to a flat land-use plan. `O` starts a cinematic orbit.
+
+### 03 Review: the agent team
+- **▶ Run all agents** runs every agent at once. The **constellation** view shows agent cards floating over the map, linked to the site (toggle with `C`).
+- Each agent also has its own card in the **Agent Hub** (right panel), with a run button and rich results.
+
+### Chat and command bar (the orchestrator)
+Type in the top bar or the chat, e.g. *"find the best 60 MW site in the west, away from housing"*, *"make it 80 MW with air cooling"* or *"run compliance and draft a community letter"*.
+
+Gemini acts on the app through tools: list sites, select a site, fly the camera, change the design, switch 2D/3D, toggle layers and run agents. The small purple lines in the chat show each action it takes. The chat is always live, never cached.
+
+### Voice Copilot
+- **Tap** the coral 🎙 in the command bar, or **hold Space**, and speak, e.g. *"take me to Site D and show it in 2D"*.
+- **Gemini Live** answers out loud (about 0.4 s after you stop), moves the map with the same tools as the chat, and shows **live captions** over the map.
+- Everything is logged in the chat.
+- The **▾** next to the mic chooses the voice and turns spoken replies on or off.
+- **Tip:** say site letters ("Site D") rather than street names. Speech recognition handles letters more reliably.
+
+### Investor memo email
+- In the **Comms** card, choose **Investor memo (email)** → **Draft**, or say or type *"email the investor memo"*.
+- An email-style compose window opens with the memo and the concept render, flythrough and compliance summary attached.
+- **You press Send.** Sending is **simulated**, with a Gmail-like Undo, and nothing leaves the app.
+- **Open in Gmail ↗** opens a real Gmail draft instead, for you to send yourself.
+- The recipient comes from `config.local.js` (`COMMS.recipient`), so real addresses never reach the repo.
+
+### Multiplayer mode (mock)
+- Click the **avatar row** in the top bar, or press **M**, to show Figma/Miro-style live cursors.
+- **Agent cursors** appear while agents actually run:
+  - Site Scout visits the top sites by score.
+  - Compliance traces the parcel and drops result pins.
+  - Render frames the massing.
   - Comms highlights and co-types in the memo.
-- Two teammate cursors, Andrew and Sammie (edit `HUMANS` in `agents/presence.js`), wander, point, leave comments and suggest tweaks.
-- It's visual only: nothing it does changes the design. Toggle it off, or Reset, to clear it.
+- **Teammate cursors** (Andrew and Sammie) follow a scripted storyline: they point at Site D's grid connection, the compliance warning, the site's weakest criterion, and more.
+- It's **visual only** and never changes the design. Rename the teammates in `HUMANS` in `agents/presence.js`.
 
-**Reset between runs.** Press **↺ Reset** in the top bar (or `Shift+R`). It clears the site, design, agent results and chat, and flies back to the island view, with no reload. Cached renders are kept.
+### Reset
+**↺ Reset** in the top bar (or `Shift+R`) returns to a fresh session without reloading. It clears the site, design, agent results and chat, and multiplayer turns off. Cached renders are kept.
 
-**Shortcuts:**
+---
+
+## Suggested 3-minute demo
+
+1. **Island view:** *"118k buildings, scored for data-centre suitability."* Press `T` to show the 2D land-use plan, then `T` again.
+2. **Voice:** hold Space: *"Take me to Site D."* The map flies to Pasir Panjang, with captions.
+3. **Site story:** 759 m to Labrador 400kV Substation, industrial land 100, community buffer 99. Fibre (44) is the trade-off.
+4. **Design:** open 02, drag IT load and storeys, and watch the massing and PUE change live.
+5. **Multiplayer:** press `M` as the reveal: *"and here's the team working live."*
+6. **Review:** **Run all agents**. Cursors and constellation cards light up, compliance pins drop, and the render appears.
+7. **Flythrough:** Render Studio → **▶ Omni flythrough** (instant, from the cache).
+8. **Close:** *"Email the investor memo."* Review the draft and press **Send**.
+9. Press **Reset** before the next run.
+
+> Site Scout ranks Site A first (score 95 vs D's 82). If you pitch D, either skip Site Scout or frame it: *"A wins on fibre; D wins on the 400kV grid and the waterfront."*
+
+---
+
+## Controls
 
 | Key | Action |
-| --- | --- |
-| `T` | 2D/3D |
-| `O` | orbit |
-| `L` | layers |
+|---|---|
+| `1` `2` `3` | Site / Design / Review |
+| `T` | 2D / 3D |
+| `O` | orbit camera |
+| `L` | layers panel |
 | `C` | agent constellation |
-| `1` `2` `3` | stages |
-| `⌘K` | command bar |
-| `Shift+R` | reset demo |
+| `M` | multiplayer cursors |
 | hold `Space` | talk to Voice Copilot |
-| `M` | multiplayer cursors on/off |
+| `⌘K` | focus the command bar |
+| `Shift+R` | reset demo |
+| `Esc` | close popovers |
 
-## Render and agent cache
+---
 
-Omni flythroughs take about 75 s and Nano Banana renders about 20 s. For the rehearsed demo path they're pre-generated and served from a cache.
+## Architecture
 
-**Lookup order:** every agent run checks, in order:
-
-1. **Project cache** (`data/cache/`): committed, so it works on any machine and offline.
-2. **Browser cache** (IndexedDB): anything generated live on this machine.
-3. **Live Gemini call.** The result is then saved to the browser cache.
-
-**What counts as a match:** agent + variant (such as `image:dusk` or `comms:community`) + site + the exact design parameters. If you move a slider, it's a fresh live generation. To reuse per-site results even after changing the design, set `CONFIG.CACHE.matchSite = true`.
-
-**Background pre-rendering:** when a site is picked, or the design stops changing for 4 s, Render Studio quietly starts the concept image and the Omni flythrough. Clicking Render (or asking by voice or chat) picks up that job instead of starting a new one, so after a minute of talking about a design, its renders are usually ready.
-- At most one image and one video are generated at a time; if the design keeps changing, only the latest request waits.
-- It only runs in 3D view.
-- Turn it off with `CONFIG.CACHE.prefetch.enabled = false`, or set `video: false` to pre-render images only.
-
-**How it looks:** cached results appear after a short "working" beat (`CACHE.simulatedDelayMs`) and carry a small `· cached` tag in the agent card.
-
-**Regenerating the project cache.** This needs Node, uses your installed Chrome, and takes about 2 min per site with video:
-
-```bash
-npm install                 # once (puppeteer-core only)
-npm run prewarm             # sites/styles/comms from CONFIG.CACHE.prewarm
-npm run prewarm -- --sites site-2,site-4 --styles day,dusk --no-video
+```
+                 ┌──────────── index.html + css/ ────────────┐
+                 │  top bar · left panel · map · agent hub    │
+                 └───────────────────┬────────────────────────┘
+js/main.js  boot: map → data layers → cache → agents → UI → click router
+                                     │
+     ┌───────────────┬───────────────┼────────────────┬──────────────────┐
+ js/map/          js/core/        js/core/          js/core/          agents/*.js
+ MapAdapter       store + bus     actions           orchestrator      one file each,
+ (MapLibre;       (state +        (the only place   (Gemini function  loaded in
+ Google 3D        events)         that mutates      calling over      isolation
+ optional)                        state + map)      core + agent      from agents/
+     │                                 │            tools)            index.js
+ layers/:                          js/core/cache.js      │
+ buildings, suitability,           (project files →      └── voice.js reuses the
+ datacentres, design               IndexedDB → live)          same tools over the
+                                                               Live API
 ```
 
-New runs merge into `data/cache/manifest.json`. Commit `data/cache/` to share it with the team. To clear the browser cache, run `monolith.cache.clearBrowser()` in devtools. To turn caching off, set `CONFIG.CACHE.enabled = false`.
+**Principles:**
+- **One place changes things:** UI, chat, voice and agents all go through `ctx.actions`, so every way of asking behaves the same.
+- **Agents never import each other.** They share state through `ctx.store` and events through `ctx.bus`.
+- **A broken agent file can't crash the app:** each one loads, mounts and runs inside `try/catch`.
+- **Demo-safe:** every Gemini call has a timeout, plus an optional canned fallback (`CONFIG.DEMO_FALLBACK`).
 
-**Make your agent cacheable:** agents are cached by default. Set `cacheVariant` if one agent produces different outputs (see `agents/render.js`), `cacheScope: 'global'` if the result doesn't depend on the site, or `cache: false` to opt out.
+---
 
-## Add your agent (5 minutes)
+## Agents
+
+| Agent | File | What it does | Model |
+|---|---|---|---|
+| **Site Scout** | `agents/siteScout.js` | Ranks the candidates and explains the trade-offs | text |
+| **Render Studio** | `agents/render.js` | Photoreal concept render from the live 3D view; Omni flythrough video; background pre-rendering | image, Omni |
+| **Compliance** | `agents/compliance.js` | Deterministic checks on the design (PUE, plot ratio, height, grid, housing buffer, water) extended and explained by Gemini | text |
+| **Comms** | `agents/comms.js` | Stakeholder brief, community letter, press release, investor memo email (compose window: `agents/lib/compose.js`) | text |
+| **Voice Copilot** | `agents/voice.js` | Talk to the map (no hub card) | Live |
+| **Multiplayer** | `agents/presence.js` | Mock collaborator cursors (no hub card) | none |
+
+---
+
+## Add your own agent
 
 1. `cp agents/_template.js agents/myAgent.js`
 2. Add `'myAgent.js'` to `agents/index.js`.
-3. Reload. Your agent gets a card in the Agent Hub, a node in the constellation, a spot in **Run all agents**, and a `run_agent` entry the orchestrator can call from chat.
+3. Reload.
+
+Your agent gets a card in the Agent Hub, a node in the constellation, a place in **Run all agents**, and a `run_agent` entry the chat and voice can call.
 
 ```js
 export default {
   id: 'myAgent', name: 'My Agent', icon: '◆', color: '#5b7fc7', stage: 'review',
   description: 'One line for the hub.',
-  async run(ctx) {
+  async run(ctx, opts) {
     const { metrics } = ctx.getDesign();
     const { text } = await ctx.gemini.generate(`Assess this design: ${JSON.stringify(metrics)}`);
-    return { status: 'info', summary: text.slice(0, 200) };   // 'pass' | 'warn' | 'fail' | 'info'
+    return { status: 'info', summary: text.slice(0, 200) };   // status: 'pass' | 'warn' | 'fail' | 'info'
   },
-  renderResult(el, result) { /* optional rich card body */ },
-  fallback() { return { status: 'info', summary: 'Offline demo output' }; }, // shown if Gemini fails
-  tools: [ /* optional extra Gemini function-calling tools, JSON Schema params */ ],
+  renderResult(el, result, ctx) {},   // optional: rich card body
+  fallback(ctx) { return { status: 'info', summary: 'Offline demo output' }; },  // optional: used if Gemini fails
+  tools: [],                          // optional: extra Gemini function-calling tools (JSON Schema params)
 };
 ```
 
-Agents load in isolation, so a broken agent file never takes the app down. Agents don't import each other. Instead they read shared state (`ctx.store.get().agents.compliance.result`) and emit events (`ctx.bus`).
+**Optional hooks:**
 
-### What `ctx` gives you
+| Hook | Purpose |
+|---|---|
+| `mount(el, ctx)` | custom controls inside the agent's card |
+| `init(ctx)` | UI outside the card; slots are `ctx.ui.slots.command`, `.stage` and `.topbar` |
+| `hidden: true` | no hub card or constellation node (used by voice and multiplayer) |
+| `reset(ctx)` | clear module state when the presenter hits Reset |
+| `cacheVariant(ctx, opts)` / `cacheScope: 'global'` / `cache: false` | control caching |
+| `manualOnly: true` | skipped by "Run all agents" |
+
+**What `ctx` gives you:**
 
 | | |
 |---|---|
-| `ctx.getSite()` / `ctx.getDesign()` | selected site (score, breakdown, nearest substation/DC) and design `{ params, metrics, warnings, geojson }` |
-| `ctx.snapshot()` / `ctx.map.cleanSnapshot()` | JPEG of the 3D view (clean = labels hidden), ready for image models |
-| `ctx.gemini` | `generate`, `generateJSON(prompt, schema)`, `image(prompt, {images})`, `omni(prompt, {images})`, `video()` |
-| `ctx.actions` | `selectSite`, `setDesignParams`, `setStage`, `setMode`, `toggleLayer`, `flyTo`, `runAgent(id, opts)`, `runTask(id, fn, fallback, { variant })`, `reset` |
-| `ctx.cache` | `get`/`put` results, `clearBrowser()`, `stats()` |
-| `ctx.massing(site, params)` | pure massing + metrics engine (`js/design/massing.js`) |
-| `ctx.map.map` | raw MapLibre instance for custom layers |
-| `ctx.ui` | `toast`, `lightbox(src, 'image' \| 'video')`, `ask(text)` (send a message to the orchestrator) |
+| `ctx.getSite()` / `ctx.getDesign()` | the selected site (score, breakdown, nearest substation and DC) and the design `{ params, metrics, warnings, geojson }` |
+| `ctx.gemini` | `generate`, `generateJSON(prompt, schema)`, `image(prompt, { images })`, `omni(prompt, { images })`, `video()` |
+| `ctx.actions` | `selectSite`, `setDesignParams`, `setStage`, `setMode`, `toggleLayer`, `flyTo`, `runAgent(id, opts)`, `runTask(id, fn, fallback, opts)`, `reset` |
+| `ctx.snapshot()` / `ctx.map.cleanSnapshot()` | JPEG of the 3D view (the clean version hides labels and overlays), ready for image models |
+| `ctx.orchestrator` | `tools()`, `system`, `state()`, so another front-end can drive the same actions |
+| `ctx.cache` | `get`, `peek`, `put`, `clearBrowser()`, `stats()` |
+| `ctx.massing(site, params)` | the pure massing and metrics engine |
+| `ctx.map.map` | the raw MapLibre instance, for custom layers |
+| `ctx.ui` | `toast`, `lightbox(src, type)`, `ask(text)` (send a message to the chat) |
 
-In devtools, everything is exposed on `window.monolith`, e.g. `monolith.actions.runAgent('compliance')`.
+In devtools, everything is on `window.monolith`, e.g. `monolith.actions.runAgent('compliance')`.
 
-## Who owns what
+---
 
-| Area | File | Notes |
+## Data and scoring
+
+`scripts/prep_data.py` (Python standard library only, about 1 min) turns the raw 135 MB OpenStreetMap export (`data/sg_buildings_v5.geojson`, not in the repo) into about 10 MB of browser-sized files in `data/build/`:
+
+| File | Contents |
+|---|---|
+| `buildings.core.json` / `buildings.landed.json` | building footprints in a compact delta-encoded format (decoded by `js/map/layers/buildings.js`). Landed houses load after first paint. |
+| `suitability.geojson` | 250 m score grid (cells scoring 40 or more) |
+| `sites.json` | top 8 candidate sites, at least 1.5 km apart |
+| `datacentres.geojson`, `substations.geojson` | infrastructure points |
+
+**Score** = 35% industrial land + 25% grid power + 20% fibre + 20% community:
+
+| Criterion | How it's measured |
+|---|---|
+| Industrial land | industrial / business-park share of the cell's building footprint |
+| Grid power | 1 − distance to nearest substation ÷ 3 km |
+| Fibre | 1 − distance to nearest data centre ÷ 5 km |
+| Community | 1 − residential share in the surrounding 750 m block |
+
+To change the weights, edit `prep_data.py` and re-run `npm run data`.
+
+---
+
+## Design model and assumptions
+
+`js/design/massing.js` is pure JavaScript (no DOM) that turns parameters into geometry and metrics.
+
+| Parameter | Liquid cooling | Air cooling |
 |---|---|---|
-| Omni flythroughs | `agents/render.js` → `flythrough()` | Omni runs through the **Interactions API** and returns an inline mp4 (~10 s long, ~75 s to generate). Snapshots are centre-cropped to 16:9 so the output is landscape. |
-| Compliance | `agents/compliance.js` | Deterministic checks + Gemini explanation. Plug real URA/NEA rule sources into `localChecks()`. |
-| Voice | `agents/voice.js` | Live API WebSocket from the browser; reuses `ctx.orchestrator.tools()`. Replies ~0.4 s after you stop talking. |
-| Comms | `agents/comms.js` | Brief / letter / press / investor drafts. Add channels (Gmail, Docs, Slack), translation, TTS. |
-| Site selection | `agents/siteScout.js`, `scripts/prep_data.py` | Scoring weights live in `prep_data.py` (land 35%, power 25%, fibre 20%, community 20%). |
+| White-space power density | 4.0 kW/m² | 1.6 kW/m² |
+| Rack density | 45 kW | 12 kW |
+| Design PUE (+0.03 for 2N) | 1.18 | 1.38 |
+| Water usage effectiveness | 0.2 L/kWh | 1.6 L/kWh |
+| Capex | US$12.5M / MW | US$10.5M / MW |
+
+**Other assumptions:**
+- **Space and layout:** gross floor is 1.55 × white space. Floors are 6 m apart, plus 3.5 m of rooftop plant. There's a 12 m setback and a 30 m service yard.
+- **Operation:** 80% average utilisation, and a grid carbon factor of 0.4168 kg CO₂/kWh (EMA 2023).
+- **Generators:** 2.5 MW gensets. N+1 means *n + ⌈n/6⌉* units; 2N means *2n*.
+
+Compliance thresholds are in `agents/compliance.js`:
+
+| Check | Rule |
+|---|---|
+| PUE | ≤ 1.3 (DC-CFA) |
+| Plot ratio | ≤ 2.5 (B2) |
+| Height | ≤ 50 m |
+| Substation distance | pass ≤ 2 km, warn ≤ 4 km |
+| Community buffer | ≥ 70 |
+| WUE | ≤ 1.0 |
+
+These are **indicative figures for a demo**, not engineering advice.
+
+---
+
+## Speed: caching and pre-rendering
+
+Live generation takes about **15 s** for a render and about **50 s** for an Omni flythrough. The app hides that wait in three ways.
+
+**1. Result cache.** Every agent run checks, in order:
+
+1. **Project cache** (`data/cache/`): pre-generated with `npm run prewarm`. **It's local only and gitignored**, so each presenter builds their own.
+2. **Browser cache** (IndexedDB): everything generated live on this machine.
+3. **Live Gemini call.** The result is then saved to the browser cache.
+
+A match means the same agent + variant (e.g. `image:dusk`, `comms:investor`) + site + **exact design parameters**. **Flythroughs are the exception:** they always use the site's cached video, or the nearest candidate site's video for a custom cell, **regardless of design changes**. Cached results appear after a short "working" beat and show a small `· cached` tag.
+
+**2. Background pre-rendering.** When a site is picked, or the design stops changing for 4 s, Render Studio quietly starts the image (and the video, if none is cached). A later click picks up the job in progress instead of starting a new one. At most one image and one video run at a time. Turn it off with `CONFIG.CACHE.prefetch.enabled = false`.
+
+**3. Pre-generating** (needs Node and Chrome; about 2 min per site with video):
+
+```bash
+npm install                                             # once: puppeteer-core only
+npm run prewarm                                         # sites / styles / comms from CONFIG.CACHE.prewarm
+npm run prewarm -- --sites site-4 --only compliance,comms --comms brief,community,investor
+npm run prewarm -- --sites site-2,site-5 --styles day,dusk --no-video
+```
+
+`--only` takes any of `scout, compliance, comms, image, video`. Runs merge into `data/cache/manifest.json`.
+
+To clear the browser cache, run `monolith.cache.clearBrowser()` in devtools. To turn all caching off, set `CONFIG.CACHE.enabled = false`.
+
+> Without a local `data/cache/`, as in a fresh clone, everything simply generates live on first use.
+
+---
+
+## Configuration
+
+**`config.js`** (committed):
+- **`MODELS`:** the model ids.
+- **`DEMO_FALLBACK`:** show canned output when Gemini fails.
+- **`CACHE`:** `enabled`, `matchSite`, `simulatedDelayMs`, `prefetch`, and the `prewarm` plan.
+- **`MAP`:** style and starting camera.
+
+**`config.local.js`** (gitignored; copy from `config.local.example.js`):
+
+```js
+export default {
+  GEMINI_KEY: '',          // AI Studio key
+  GOOGLE_MAPS_KEY: '',     // optional "AIza…" key: enables the Photoreal 3D button
+  COMMS: {
+    recipient: { name: 'Jane Doe', org: 'Example Capital', email: 'jane@example.com' },
+    sender: 'The Monolith team',
+  },
+};
+```
+
+The Gemini key can also come from `?key=…` in the URL, or from clicking the **Gemini** pill in the top bar. Either way it's remembered in that browser only.
+
+---
+
+## Deploying
+
+Upload the folder to any static host (GitHub Pages, Firebase Hosting, Cloud Storage). `config.local.js` isn't deployed, so open the site once with `?key=YOUR_GEMINI_KEY`, or click the Gemini pill to enter the key.
+
+---
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| New features don't show up | Hard refresh with **Cmd+Shift+R**. Browsers cache the JavaScript modules. |
+| Top bar says **Add Gemini key** / **Gemini offline** | Add the key to `config.local.js`, or click the pill. Check the key is valid for the Gemini API. |
+| Mic does nothing, or turns amber | Allow microphone access for the site and use Chrome. Typing always works. |
+| Renders are slow | They're live: the design differs from the pre-rendered version, or there's no local cache. Background pre-rendering starts about 4 s after the design settles. |
+| Console: `Expected value to be of type number, but found null` | Harmless. It comes from the OpenFreeMap basemap style. |
+| Console: 404 for `data/cache/manifest.json` | Harmless. There's no local cache yet, so everything generates live. |
+
+---
+
+## Known limitations
+
+- **Google Maps needs a separate key.** Maps JS, Places, Geocoding and Photorealistic 3D Tiles need an `AIza…` Maps key, not the Gemini key. The Photoreal view (`js/map/google3d.js`) hasn't been tested yet.
+- **Veo is unverified.** `gemini.video()` is wired up but untested; Omni is the verified video path.
+- **Omni videos are about 10 s long,** and are generated from a 16:9 snapshot of the current view.
+- **Sending email is simulated.** Real sending would need a Google OAuth client for the Gmail API.
+- **Multiplayer is a scripted mock,** with no real-time sync.
+- **All figures are indicative.** Site scores, costs and compliance results come from open data and simplified rules.
+
+---
 
 ## Project layout
 
 ```
-index.html, config.js         keys + model ids (DEMO_FALLBACK keeps the demo alive if Gemini fails)
-css/                          tokens.css (palette from design refs), app.css
-js/main.js                    boot sequence + click router
-js/core/                      store, bus, registry, gemini client, actions, orchestrator
-js/map/                       MapAdapter (renderer-agnostic), maplibre.js, google3d.js, layers/*
-js/design/massing.js          parametric DC massing + engineering metrics
-js/ui/                        shell, left panel (stages), agent hub (chat), constellation overlay, map controls
-agents/                       one file per agent + index.js manifest
-data/build/                   generated, browser-sized data (≈10 MB)
-data/cache/                   pre-generated agent results + media (npm run prewarm)
-scripts/prep_data.py          regenerates data/build from data/sg_buildings_v5.geojson (stdlib only)
-scripts/prewarm.mjs           drives the app headlessly to fill data/cache
+index.html                 app shell
+config.js                  models, cache, map settings (+ config.local.js for secrets, gitignored)
+css/                       tokens.css (palette), app.css
+js/main.js                 boot sequence + map click router
+js/core/                   store, bus, registry, gemini client, actions, orchestrator, cache
+js/map/                    MapAdapter, maplibre.js, google3d.js, layers/{buildings,suitability,datacentres,design}.js
+js/design/massing.js       parametric massing + engineering metrics
+js/ui/                     shell, left panel, agent hub + chat, constellation overlay, map controls, toast
+agents/                    one file per agent, index.js manifest, _template.js, lib/compose.js
+data/build/                browser-ready data (committed)
+data/cache/                pre-generated agent results (local only, gitignored)
+scripts/prep_data.py       rebuilds data/build from the raw OSM export
+scripts/prewarm.mjs        fills data/cache by driving the app headlessly
 ```
 
-Regenerate the data after changing scoring with `python3 scripts/prep_data.py`, which takes about 1 minute.
-
-## Keys and limits
-
-- **Gemini key (not committed).** GitHub push protection blocks keys, and Google disables leaked ones. Provide it in any of these ways:
-  - **Locally:** `cp config.local.example.js config.local.js` and paste the key. The file is gitignored.
-  - **On a deployed site:** open it once with `?key=YOUR_KEY` in the URL, or click the **Gemini** pill in the top bar. The key is remembered in that browser only.
-  - **Without a key:** the cached demo path (`data/cache/`) still works, and everything else shows canned demo output.
-- **Google Maps needs a separate key.** Maps JS, Places, Geocoding and Photorealistic 3D Tiles need a Maps key starting `AIza…`. Put it in `GOOGLE_MAPS_KEY` in `config.local.js` and a **Photoreal** (globe) button appears in the map controls. That path (`js/map/google3d.js`) hasn't been tested yet because we don't have a Maps key.
-- **Veo is unverified.** `gemini.video()` (Veo long-running op) is wired up but untested. Omni is the verified video path.
-- **Basemap warning.** The console shows `Expected value to be of type number, but found null` from the OpenFreeMap basemap style. It's harmless.
+Data © OpenStreetMap contributors. Tiles by OpenFreeMap. Rendering by MapLibre GL.

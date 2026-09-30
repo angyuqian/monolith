@@ -46,13 +46,25 @@ async function genVideo(ctx, s, shot, design) {
   return { status: 'info', summary: `Omni flythrough ready (${s}).`, media, data: { snapshot: shot } };
 }
 
+// Nearest candidate site (for custom grid cells, which have no pre-rendered video of their own).
+function nearestCandidate(ctx) {
+  const { site, sites } = ctx.store.get();
+  if (!site) return null;
+  const d = (s) => Math.hypot((s.lng - site.lng) * Math.cos((site.lat * Math.PI) / 180), s.lat - site.lat);
+  return [...sites].sort((a, b) => d(a) - d(b))[0];
+}
+
+// Flythroughs always play from the cache when one exists for this site (or the nearest candidate site),
+// regardless of design changes — Omni takes ~50 s live.
+const videoCacheOpts = (ctx, s) => ({ variant: `video:${s}`, matchSite: true, fallbackSite: nearestCandidate(ctx) });
+
 // User-initiated flythrough (button, voice, chat). Cache / in-flight background job are checked by runTask first.
 const runFlythrough = (ctx, s = style) => ctx.actions.runTask('render', async (c) => {
   const design = c.getDesign();
   if (!design) return { status: 'warn', summary: 'Select a site first.' };
   c.ui.toast('Omni is rendering a flythrough — this can take a minute or two');
   return genVideo(c, s, await snapshot(c, { forceThreeD: true }), design);
-}, null, { variant: `video:${s}` });
+}, null, videoCacheOpts(ctx, s));
 
 // ---------------------------------------------------------------- background pre-rendering
 const busy = { image: false, video: false };
@@ -81,6 +93,11 @@ async function prefetch(ctx) {
   for (const kind of kinds) {
     const keys = cacheKeys({ agentId: 'render', variant: `${kind}:${style}`, site, params: design.params });
     if (ctx.cache.isInflight(keys) || await ctx.cache.get(keys)) continue; // already cached or being made
+    if (kind === 'video') { // a cached site video will be used regardless of design: don't generate another
+      const near = nearestCandidate(ctx);
+      if (await ctx.cache.get(keys, { matchSite: true })) continue;
+      if (near && await ctx.cache.get(cacheKeys({ agentId: 'render', variant: `video:${style}`, site: near, params: design.params }), { matchSite: true })) continue;
+    }
     todo.push({ kind, keys });
   }
   if (!todo.length) return;

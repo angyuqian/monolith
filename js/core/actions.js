@@ -80,7 +80,12 @@ export function createActions(adapter, getCtx) {
       bus.emit(EVENTS.AGENT_STARTED, { id });
       const epoch = resetEpoch;
       const asked = Date.now();
-      let result = await cache.get(keys);
+      // opts.matchSite: reuse this site's cached result even if the design changed;
+      // opts.fallbackSite: if still nothing, reuse that (nearest candidate) site's cached result
+      let result = await cache.get(keys, opts.matchSite ? { matchSite: true } : undefined);
+      if (!result && cacheable && opts.fallbackSite) {
+        result = await cache.get(cacheKeys({ agentId: id, variant: opts.variant, scope: agent?.cacheScope, site: opts.fallbackSite, params: design?.params }), { matchSite: true });
+      }
       if (result) {
         const [lo, hi] = CONFIG.CACHE?.simulatedDelayMs || [0, 0];
         await sleep(Math.max(0, lo + Math.random() * (hi - lo) - (Date.now() - asked)));

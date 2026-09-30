@@ -6,3 +6,5 @@ node_modules/
 config.local.js
 # design reference screenshots (kept locally, not in the repo)
 Screenshot*.png
+# pre-generated agent results (npm run prewarm) — kept local, not shared; everyone else generates live
+data/cache/

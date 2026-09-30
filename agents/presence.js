@@ -387,7 +387,14 @@ const STORY = {
       id: 'score',
       when: () => { const el = q('.site-detail__score'); return el && visible(el) ? el : null; },
       go: (el) => dom(el, 0.9, 0.35),
-      say: () => `${app.store.get().site?.score.toFixed(0)} — strongest in the cluster`,
+      say: () => { // accurate for any site: #1 on the shortlist, or its strongest criterion
+        const { site, sites } = app.store.get();
+        const top = [...sites].sort((x, y) => y.score - x.score)[0];
+        if (top?.id === site.id) return `${site.score.toFixed(0)} — top of the shortlist`;
+        const names = { land: 'industrial land', power: 'grid power', fibre: 'fibre', community: 'community buffer' };
+        const [k, v] = Object.entries(site.breakdown).sort((x, y) => y[1] - x[1])[0];
+        return `${site.score.toFixed(0)} overall — strong on ${names[k] || k} (${v})`;
+      },
     },
     {
       id: 'complianceSummary',

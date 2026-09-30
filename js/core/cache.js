@@ -92,7 +92,7 @@ export const cache = {
     return Object.keys(manifest.entries || {}).length;
   },
 
-  async get(keys) {
+  async get(keys, { matchSite = CONFIG.CACHE?.matchSite } = {}) {
     if (!opts.read || !keys) return null;
     const exact = fromProject(keys.key) || fromRecord(await idb('readonly', (s) => s.get(keys.key)));
     if (exact) return exact;
@@ -100,7 +100,7 @@ export const cache = {
       const r = await inflight.get(keys.key).catch(() => null);
       if (r) return { ...structuredClone({ ...r, media: undefined }), media: r.media, prefetched: true };
     }
-    if (!CONFIG.CACHE?.matchSite) return null;
+    if (!matchSite) return null;
     const pk = projectBySite.get(keys.siteKey);
     if (pk) return fromProject(pk);
     const recs = await idb('readonly', (s) => s.index('siteKey').getAll(keys.siteKey));
