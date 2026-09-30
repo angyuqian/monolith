@@ -84,7 +84,11 @@ async function boot() {
     massing: computeMassing,
     ui: {
       toast, lightbox, ask: () => {},
-      slots: { command: document.getElementById('command-slot'), stage: document.getElementById('map-stage') },
+      slots: {
+        command: document.getElementById('command-slot'),
+        stage: document.getElementById('map-stage'),
+        topbar: document.getElementById('topbar-slot'),
+      },
     },
     getSite: () => store.get().site,
     getDesign: () => store.get().design,

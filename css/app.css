@@ -522,3 +522,71 @@ select.input, input.input { width: 100%; height: 32px; padding: 0 10px; border: 
 .snackbar.is-on { transform: none; opacity: 1; }
 .snackbar button { border: 0; background: transparent; color: #a8c7fa; font-weight: 600; padding: 0; }
 .sent-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--green); background: var(--green-soft); border-radius: 999px; padding: 2px 9px; font-weight: 600; }
+
+/* ---------- multiplayer (mock presence) ---------- */
+.topbar__slot { display: flex; align-items: center; }
+.facepile-btn {
+  display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 6px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: 12px; font-weight: 500;
+  transition: border-color .15s, box-shadow .15s;
+}
+.facepile-btn:hover { border-color: var(--line-strong); }
+.facepile-btn.is-on { border-color: #cfc6f3; box-shadow: 0 0 0 3px #efebfc; color: var(--ink); }
+.facepile { display: flex; }
+.facepile__face {
+  position: relative; width: 22px; height: 22px; margin-left: -6px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--c); color: #fff; font-size: 10.5px; font-weight: 700; border: 2px solid var(--surface);
+}
+.facepile__face:first-child { margin-left: 0; }
+.facepile-btn:not(.is-on) .facepile__face { filter: grayscale(.85); opacity: .7; }
+.facepile__label { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.facepile__live { width: 7px; height: 7px; border-radius: 50%; background: #2fb36d; box-shadow: 0 0 0 3px rgba(47,179,109,.18); }
+
+.presence-layer { position: fixed; inset: 0; pointer-events: none; z-index: 45; }
+.p-cursor { position: absolute; left: -4px; top: -3px; opacity: 0; transition: opacity .3s; will-change: transform; }
+.p-cursor.is-on { opacity: 1; }
+.p-cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+.p-cursor__tag {
+  position: absolute; left: 16px; top: 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+}
+.p-cursor__tag b {
+  background: var(--c); color: #fff; font: 600 12px var(--font); padding: 4px 10px; border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18); white-space: nowrap;
+}
+.p-cursor__say {
+  display: none; background: #fff; color: var(--ink-2); font-size: 11.5px; padding: 3px 8px; border-radius: 7px;
+  border: 1px solid var(--c); white-space: nowrap; box-shadow: var(--shadow-1);
+}
+.p-cursor.has-say .p-cursor__say { display: block; }
+.p-cursor.is-click::after {
+  content: ''; position: absolute; left: -6px; top: -6px; width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--c); animation: pClick .45s var(--ease) forwards;
+}
+@keyframes pClick { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+.p-cursor.is-drag svg { transform: scale(.88); transform-origin: 4px 3px; }
+
+.p-pin { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 6px; opacity: 0; transition: opacity .3s; pointer-events: auto; }
+.p-pin.is-on { opacity: 1; }
+.p-pin__dot {
+  width: 24px; height: 24px; margin: -24px 0 0 -2px; border-radius: 12px 12px 12px 2px; background: var(--c); color: #fff;
+  display: grid; place-items: center; font: 700 11px var(--font); box-shadow: 0 3px 10px rgba(0,0,0,.2); border: 2px solid #fff; flex: none;
+}
+.p-pin__text {
+  margin-top: -24px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--c); border-radius: 8px;
+  padding: 4px 9px; font-size: 11.5px; white-space: nowrap; box-shadow: var(--shadow-1); max-width: 260px; overflow: hidden; text-overflow: ellipsis;
+  transition: opacity .25s, max-width .3s var(--ease);
+}
+.p-pin.is-collapsed .p-pin__text { opacity: 0; max-width: 0; padding: 4px 0; border-width: 0; }
+.p-pin.is-collapsed:hover .p-pin__text { opacity: 1; max-width: 260px; padding: 4px 9px; border-width: 1px 1px 1px 3px; }
+
+.p-marquee {
+  position: absolute; border: 1.5px dashed var(--c); background: color-mix(in srgb, var(--c) 8%, transparent); border-radius: 4px;
+}
+.p-marquee span {
+  position: absolute; left: -1px; top: -21px; background: var(--c); color: #fff; font: 600 10.5px var(--font);
+  padding: 2px 7px; border-radius: 5px 5px 5px 0; white-space: nowrap;
+}
+.p-mark { background: color-mix(in srgb, var(--c) 22%, transparent); color: inherit; border-radius: 3px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent); transition: background .2s; }
+.p-typed { color: var(--ink); }
+.p-typed span { background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: 3px; }
+.p-caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 1px; vertical-align: text-bottom; background: var(--c); animation: blink 1s steps(1) infinite; }

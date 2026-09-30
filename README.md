@@ -24,6 +24,15 @@ To deploy, upload the folder to any static host (Firebase Hosting, GitHub Pages,
 - The recipient is set in `config.local.js` under `COMMS.recipient`, so real addresses never reach the repo.
 - Cached drafts use `{{first_name}}` / `{{org}}` placeholders, filled in at display time.
 
+**Multiplayer mode (mock).** Click the avatar row in the top bar, or press **M**, to switch on live collaborator cursors, Figma/Miro-style.
+- Agents appear as named cursors while they run:
+  - Site Scout hops between candidate sites.
+  - Compliance traces the parcel and drops comment pins.
+  - Render Studio draws a framing box around the massing.
+  - Comms highlights and co-types in the memo.
+- Two teammate cursors, Andrew and Sammie (edit `HUMANS` in `agents/presence.js`), wander, point, leave comments and suggest tweaks.
+- It's visual only: nothing it does changes the design. Toggle it off, or Reset, to clear it.
+
 **Reset between runs.** Press **↺ Reset** in the top bar (or `Shift+R`). It clears the site, design, agent results and chat, and flies back to the island view, with no reload. Cached renders are kept.
 
 **Shortcuts:**
@@ -38,6 +47,7 @@ To deploy, upload the folder to any static host (Firebase Hosting, GitHub Pages,
 | `⌘K` | command bar |
 | `Shift+R` | reset demo |
 | hold `Space` | talk to Voice Copilot |
+| `M` | multiplayer cursors on/off |
 
 ## Render and agent cache
 
