@@ -1,5 +1,7 @@
 # Monolith: Data Centre Studio
 
+**Live demo:** https://angyuqian.github.io/monolith/ (works as-is; see [what's pre-loaded](#whats-pre-loaded-where))
+
 Monolith finds a site in Singapore for a hyperscale data centre, designs the building on it, and hands the proposal to a team of AI agents. The agents check compliance, render photoreal images and flythrough videos, and draft stakeholder and investor communications. You drive it by clicking, typing, or talking.
 
 - **No build step, no backend.** It's static HTML/CSS/JS that runs in the browser.
@@ -39,14 +41,13 @@ Monolith finds a site in Singapore for a hyperscale data centre, designs the bui
 
 ```bash
 git clone https://github.com/angyuqian/monolith.git && cd monolith
-cp config.local.example.js config.local.js   # paste your Gemini API key into GEMINI_KEY
 npm start                                    # = python3 -m http.server 8000 (any static server works)
 ```
 
 Open **http://localhost:8000 in Chrome**. Chrome is recommended for voice and video. The first load takes about 7 s while it loads the city model.
 
-- **Gemini key:** use an AI Studio key for `generativelanguage.googleapis.com`. It stays in `config.local.js`, which is gitignored.
-- **No key?** The app still runs. Map, design and metrics work fully, and AI features show canned demo output instead of failing.
+- **Gemini key:** a shared hackathon key is built into `config.js` (`HACKATHON_KEY`), so it works immediately. To use your own, `cp config.local.example.js config.local.js` and set `GEMINI_KEY`. That file is gitignored.
+- **If Gemini is unreachable,** the app still runs. Map, design and metrics work fully, and AI features show canned demo output instead of failing.
 - **`npm install`** is only needed if you want to pre-generate renders (see [caching](#speed-caching-and-pre-rendering)).
 
 ---
@@ -290,6 +291,21 @@ These are **indicative figures for a demo**, not engineering advice.
 
 ---
 
+## What's pre-loaded where
+
+| | GitHub Pages / fresh clone | Presenter's laptop (after `npm run prewarm`) |
+|---|---|---|
+| City model, suitability grid, 8 sites, infrastructure (`data/build/`) | ✅ bundled | ✅ bundled |
+| Basemap tiles | streamed from OpenFreeMap | streamed from OpenFreeMap |
+| Concept renders | ⏳ live, ~15 s (background pre-rendering starts when you pick a site) | ✅ sites A–H at the default design, dusk |
+| Omni flythroughs | ⏳ live, ~50 s | ✅ sites A–H, any design (nearest site's video for custom cells) |
+| Compliance, stakeholder brief, community letter, investor memo | ⏳ live, ~6–11 s each | ✅ sites A, D, F, G |
+| Site Scout ranking | ⏳ live, ~7 s | ✅ |
+| Chat and voice | always live | always live |
+| Investor email recipient | generic "Investor" | from `config.local.js` |
+
+Anything generated live is saved in that browser (IndexedDB), so repeating the same site and design is instant afterwards, on any machine.
+
 ## Speed: caching and pre-rendering
 
 Live generation takes about **15 s** for a render and about **50 s** for an Omni flythrough. The app hides that wait in three ways.
@@ -329,7 +345,7 @@ To clear the browser cache, run `monolith.cache.clearBrowser()` in devtools. To 
 - **`CACHE`:** `enabled`, `matchSite`, `simulatedDelayMs`, `prefetch`, and the `prewarm` plan.
 - **`MAP`:** style and starting camera.
 
-**`config.local.js`** (gitignored; copy from `config.local.example.js`):
+**`config.local.js`** (gitignored; copy from `config.local.example.js`; it overrides the built-in hackathon key):
 
 ```js
 export default {
@@ -342,13 +358,24 @@ export default {
 };
 ```
 
-The Gemini key can also come from `?key=…` in the URL, or from clicking the **Gemini** pill in the top bar. Either way it's remembered in that browser only.
+**Where the Gemini key comes from** (first match wins):
+1. `config.local.js`
+2. `?key=…` in the URL
+3. a key entered via the **Gemini** pill (remembered in that browser)
+4. the built-in `HACKATHON_KEY`
+
+The built-in key is public on purpose so the hosted demo works. Rotate it after the event. If Google disables it, supply a new key in any of the first three ways.
 
 ---
 
 ## Deploying
 
-Upload the folder to any static host (GitHub Pages, Firebase Hosting, Cloud Storage). `config.local.js` isn't deployed, so open the site once with `?key=YOUR_GEMINI_KEY`, or click the Gemini pill to enter the key.
+**GitHub Pages** (already set up): every push to `main` redeploys https://angyuqian.github.io/monolith/ within about a minute.
+- `.nojekyll` makes Pages serve the files as-is.
+- On `*.github.io` the app skips `config.local.js` and the local render cache, which don't exist there.
+- The microphone works because Pages uses HTTPS.
+
+**Any other static host** (Firebase Hosting, Cloud Storage, Netlify) works the same way: upload the folder.
 
 ---
 
@@ -361,7 +388,8 @@ Upload the folder to any static host (GitHub Pages, Firebase Hosting, Cloud Stor
 | Mic does nothing, or turns amber | Allow microphone access for the site and use Chrome. Typing always works. |
 | Renders are slow | They're live: the design differs from the pre-rendered version, or there's no local cache. Background pre-rendering starts about 4 s after the design settles. |
 | Console: `Expected value to be of type number, but found null` | Harmless. It comes from the OpenFreeMap basemap style. |
-| Console: 404 for `data/cache/manifest.json` | Harmless. There's no local cache yet, so everything generates live. |
+| Console: 404 for `data/cache/manifest.json` or `config.local.js` (locally) | Harmless. There's no local cache or local config yet, so it uses defaults and generates live. |
+| Hosted site suddenly shows canned AI output | The shared key may have been disabled. Open the site with `?key=NEW_KEY`, or click the Gemini pill. |
 
 ---
 

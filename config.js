@@ -1,14 +1,22 @@
 // Monolith runtime config. Everything is client-side.
 //
-// Keys are NOT committed (GitHub push protection blocks them, and Google disables leaked keys).
 // Where the Gemini key comes from, first match wins:
 //   1. config.local.js (gitignored)  ->  export default { GEMINI_KEY: '...', GOOGLE_MAPS_KEY: '' }
 //   2. ?key=... in the page URL (remembered in this browser, then removed from the address bar)
 //   3. the browser's saved key: click the Gemini status pill in the top bar to enter it
+//   4. HACKATHON_KEY below — a shared key, intentionally public so the GitHub Pages demo works as-is.
+//      Rotate it after the event; if Google disables it, set a new one in config.local.js or via ?key=.
+const HACKATHON_KEY = 'AQ.Ab8RN6KOZ_X6A5E1N1hGs8yLcbIPYtQtWYNfGe1f0fMC6_z-vg';
+
+// On GitHub Pages there is no config.local.js or local render cache; skip those requests (avoids 404 noise).
+export const IS_HOSTED = typeof location !== 'undefined' && /\.github\.io$/.test(location.hostname);
+
 let local = {};
-try {
-  local = (await import('./config.local.js')).default || {};
-} catch { /* not present, e.g. on GitHub Pages */ }
+if (!IS_HOSTED) {
+  try {
+    local = (await import('./config.local.js')).default || {};
+  } catch { /* not present */ }
+}
 
 const KEY_STORAGE = 'monolith.geminiKey';
 
@@ -36,7 +44,7 @@ export function setGeminiKey(key) {
 
 export const CONFIG = {
   // Gemini API key (AI Studio / generativelanguage.googleapis.com).
-  GEMINI_KEY: local.GEMINI_KEY || browserKey(),
+  GEMINI_KEY: local.GEMINI_KEY || browserKey() || HACKATHON_KEY,
 
   // Google Maps JS key ("AIza..."), with Maps JavaScript API + Map Tiles API enabled.
   // Leave empty to hide the Photoreal 3D view. The Gemini key does NOT work for Maps.

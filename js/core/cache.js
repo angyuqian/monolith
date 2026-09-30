@@ -5,7 +5,7 @@
 //
 // Project files are produced by `npm run prewarm` (scripts/prewarm.mjs) and shared with the team.
 // Everything generated live is also saved to IndexedDB, so it's instant next time on this machine.
-import { CONFIG } from '../../config.js';
+import { CONFIG, IS_HOSTED } from '../../config.js';
 
 const DB = 'monolith-cache';
 const STORE = 'results';
@@ -84,6 +84,7 @@ function fromRecord(rec) {
 
 export const cache = {
   async init() {
+    if (IS_HOSTED) return 0; // the project cache is local-only (gitignored)
     try {
       const res = await fetch('data/cache/manifest.json', { cache: 'no-store' });
       if (res.ok) manifest = await res.json();
