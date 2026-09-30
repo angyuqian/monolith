@@ -84,9 +84,11 @@ export const CONFIG = {
 
   MAP: {
     style: 'https://tiles.openfreemap.org/styles/positron',
+    startMode: '2d',                              // '2d' | '3d' — how the app opens (and returns to on Reset / Home)
+    bounds: [[103.605, 1.205], [104.045, 1.475]], // whole of Singapore, fitted to the window
     center: [103.83, 1.345],
     zoom: 11.2,
-    pitch: 50,
-    bearing: -18,
+    pitch: 0,
+    bearing: 0,
   },
 };

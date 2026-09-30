@@ -47,7 +47,7 @@ export function initMapControls(ctx) {
     if (act === 'zoom-out') map.zoomOut();
     if (act === 'north') map.easeTo({ bearing: 0, duration: 600 });
     if (act === 'orbit') adapter.orbit(!adapter.isOrbiting());
-    if (act === 'home') map.flyTo({ center: [103.83, 1.345], zoom: 11.2, pitch: store.get().mode === '3d' ? 50 : 0, bearing: store.get().mode === '3d' ? -18 : 0, duration: 2200 });
+    if (act === 'home') adapter.home();
     if (act === 'photoreal') {
       if (isPhotorealOpen()) { closePhotoreal(); b.classList.remove('is-active'); return; }
       try {

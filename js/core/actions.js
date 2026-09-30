@@ -9,7 +9,6 @@ import { clearParcel } from '../map/layers/buildings.js';
 import { cache, cacheKeys } from './cache.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const ISLAND_VIEW = { center: CONFIG.MAP.center, zoom: 11.6, pitch: CONFIG.MAP.pitch, bearing: -8 };
 
 export function createActions(adapter, getCtx) {
   const { map } = adapter;
@@ -125,13 +124,15 @@ export function createActions(adapter, getCtx) {
     reset() {
       resetEpoch++;
       adapter.orbit(false);
-      if (adapter.getMode() === '2d') adapter.setMode('3d');
+      const startMode = CONFIG.MAP.startMode || '3d';
+      if (adapter.getMode() !== startMode) adapter.setMode(startMode);
       store.reset();
       updateDesign(map, null);
       clearParcel(map, null);
       registry.agents().forEach((a) => { try { a.reset?.(getCtx()); } catch (e) { console.warn(`[agent:${a.id}] reset failed`, e); } });
       bus.emit(EVENTS.RESET);
-      map.flyTo({ ...ISLAND_VIEW, duration: 2200, essential: true });
+      store.set({ mode: startMode });
+      adapter.home();
     },
 
     async runAll(stage) {

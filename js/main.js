@@ -125,8 +125,7 @@ async function boot() {
 
   bus.emit(EVENTS.MAP_READY, ctx);
   document.getElementById('loader').classList.add('is-done');
-  // gentle intro drift
-  map.easeTo({ zoom: 11.6, bearing: -8, duration: 4000 });
+  store.set({ mode: adapter.getMode() }); // opens in CONFIG.MAP.startMode
 }
 
 boot().catch((e) => {

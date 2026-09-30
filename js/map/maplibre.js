@@ -23,6 +23,7 @@ export function createMapLibreAdapter(container, config) {
       zoom: config.zoom,
       pitch: config.pitch,
       bearing: config.bearing,
+      ...(config.bounds ? { bounds: config.bounds, fitBoundsOptions: { padding: 24 } } : {}),
       maxPitch: 75,
       antialias: true,
       preserveDrawingBuffer: true, // needed for snapshot()
@@ -30,7 +31,7 @@ export function createMapLibreAdapter(container, config) {
     });
     map.on('error', (e) => console.warn('[map]', e.error?.message || e));
 
-    let mode = '3d';
+    let mode = config.startMode || '3d';
     let orbiting = false;
     let rafId = null;
     const listeners = { mode: [] };
@@ -82,6 +83,12 @@ export function createMapLibreAdapter(container, config) {
         listeners.mode.forEach((fn) => fn(mode));
       },
       getMode: () => mode,
+
+      // Whole-island view in the current mode.
+      home({ duration = 2200 } = {}) {
+        if (!config.bounds) return map.flyTo({ center: config.center, zoom: config.zoom, duration });
+        map.fitBounds(config.bounds, { padding: 24, pitch: mode === '2d' ? 0 : 45, bearing: mode === '2d' ? 0 : -12, duration, essential: true });
+      },
 
       project([lng, lat]) {
         return map.project([lng, lat]);
@@ -145,6 +152,12 @@ export function createMapLibreAdapter(container, config) {
         return { lng: c.lng, lat: c.lat, zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
       },
     };
+
+    if (mode === '2d') { // opening in plan view: lock tilt / rotation like setMode('2d') does
+      map.setMaxPitch(0);
+      map.dragRotate.disable();
+      map.touchZoomRotate.disableRotation();
+    }
 
     map.once('load', () => {
       styleBasemap(map);

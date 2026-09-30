@@ -1,7 +1,7 @@
 // Observable app state. store.set({ key }) notifies subscribers of that key and of '*'.
 const initial = {
   stage: 'site',              // 'site' | 'design' | 'review'
-  mode: '3d',                 // '2d' | '3d'
+  mode: '2d',                 // '2d' | '3d' (starts as CONFIG.MAP.startMode)
   sites: [],                  // candidate sites from data/build/sites.json
   site: null,                 // selected site
   design: null,               // { params, metrics, features }
