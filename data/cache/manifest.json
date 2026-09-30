@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "entries": {
+    "siteScout|run|global": {
+      "siteKey": "siteScout|run|global",
+      "result": {
+        "status": "info",
+        "summary": "Site A at Ubi Road 1 is the prime recommendation, offering immediate 400kV substation proximity and mature fibre ecosystems for hyperscale deployment.",
+        "data": {
+          "recommended_site_id": "site-1",
+          "headline": "Site A at Ubi Road 1 is the prime recommendation, offering immediate 400kV substation proximity and mature fibre ecosystems for hyperscale deployment.",
+          "ranking": [
+            {
+              "site_id": "site-1",
+              "rationale": "Exceptional power profile under 500 metres from Paya Lebar 400kV substation with proven adjacent data centre connectivity and full industrial zoning."
+            },
+            {
+              "site_id": "site-2",
+              "rationale": "Strong industrial enclave offering solid fibre density and reachable 400kV transmission capacity at Defu South for hyperscale scalability."
+            },
+            {
+              "site_id": "site-4",
+              "rationale": "Direct access to Labrador 400kV transmission infrastructure within 800 metres, ideal for meeting intensive 40-80 MW hyperscale load requirements."
+            }
+          ],
+          "risks": [
+            "Grid allocation competition from dense commercial and industrial users in central-east Singapore.",
+            "Right-of-way cabling approvals across major arterial roads to reach Paya Lebar 400kV substation.",
+            "Tight urban plot boundaries requiring multi-storey vertical data centre design constraints."
+          ]
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.362Z"
+    },
+    "compliance|run|site-1|dsp7no": {
+      "siteKey": "compliance|run|site-1",
+      "result": {
+        "status": "warn",
+        "summary": "Compliant with advisories. The 60 MW design satisfies core planning limits and DC-CFA targets with a 1.18 PUE, though SCDF licensing is mandated for 34 standby diesel gensets.",
+        "data": {
+          "checks": [
+            {
+              "rule": "Power usage effectiveness",
+              "authority": "IMDA / EDB · DC-CFA",
+              "status": "pass",
+              "detail": "Design PUE of 1.18 comfortably beats the IMDA DC-CFA target cap of 1.30 for new facilities."
+            },
+            {
+              "rule": "Plot ratio",
+              "authority": "URA · Business 2",
+              "status": "pass",
+              "detail": "Achieved plot ratio of 0.65 is well within the allowable URA B2 GPR limit of 2.5."
+            },
+            {
+              "rule": "Building height",
+              "authority": "URA · height control",
+              "status": "pass",
+              "detail": "Proposed 2-storey height of 15.5 m easily complies with industrial zoning limits and aviation envelopes."
+            },
+            {
+              "rule": "Grid connection",
+              "authority": "SP Group / EMA",
+              "status": "pass",
+              "detail": "Located 476 m from Paya Lebar substation; dedicated 66 kV intake supports the 70.8 MW total facility load."
+            },
+            {
+              "rule": "Residential buffer",
+              "authority": "NEA · noise and air",
+              "status": "pass",
+              "detail": "High buffer score of 99/100 mitigates emissions and noise impacts from 34 standby diesel generators."
+            },
+            {
+              "rule": "Water efficiency",
+              "authority": "PUB",
+              "status": "pass",
+              "detail": "WUE of 0.2 L/kWh and 99,233 m³/year consumption remain well below PUB thresholds, using liquid cooling."
+            },
+            {
+              "rule": "Diesel fuel storage licensing",
+              "authority": "SCDF",
+              "status": "warn",
+              "detail": "Fuel storage for 34 backup generators exceeds SCDF thresholds, mandating a formal Petroleum and Flammable Materials licence."
+            },
+            {
+              "rule": "Green Mark certification",
+              "authority": "BCA",
+              "status": "pass",
+              "detail": "Target PUE of 1.18 and liquid cooling readily position the 26,626 m² development for BCA Green Mark Platinum status."
+            }
+          ]
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.362Z"
+    },
+    "comms|comms:brief|site-1|dsp7no": {
+      "siteKey": "comms|comms:brief|site-1",
+      "result": {
+        "status": "info",
+        "summary": "Stakeholder brief drafted for Ubi Road 1.",
+        "data": {
+          "type": "brief",
+          "text": "### Opportunity\nDevelop a 60 IT MW hyperscale data centre requiring USD 750m capex. Implementing liquid cooling across 1,333 racks (45 kW/rack), the design beats IMDA DC-CFA targets with a 1.18 PUE and positions the project for BCA Green Mark Platinum status.\n\n### Site\nSite A · Ubi Road 1 (evaluation score: 95.1) spans a 40,800 m² parcel with mature fibre ecosystems. It is situated 476 m from Paya Lebar 400kV Substation—utilising a dedicated 66 kV intake to serve the 70.8 MW facility load—and 185 m from Vertex Block B.\n\n### Design\nThe 2-storey, 15.5 m tall development encompasses 26,626 m² GFA, a 12,750 m² footprint (42% coverage), and a 0.65 plot ratio. It delivers 15,000 m² of white space across 4 halls with N+1 redundancy. Annual resource usage equates to 496 GWh energy, 99,233 m³ water (0.2 WUE), and 206,802 T carbon.\n\n### Risks\nFuel storage for the 34 standby diesel generators exceeds standard thresholds, generating a compliance advisory that mandates a formal SCDF Petroleum and Flammable Materials licence.\n\n### Next steps\nSecure the SCDF Petroleum and Flammable Materials licence for the 34 gensets and advance SP Group / EMA grid intake execution.\n\n[Name]"
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.362Z"
+    },
+    "comms|comms:community|site-1|dsp7no": {
+      "siteKey": "comms|comms:community|site-1",
+      "result": {
+        "status": "info",
+        "summary": "Community letter drafted for Ubi Road 1.",
+        "data": {
+          "type": "community",
+          "text": "Dear Neighbours and Local Businesses,\n\nWe are pleased to share our plans for a proposed hyperscale data centre at Site A · Ubi Road 1. \n\nDesigned to blend thoughtfully into the area, the low-rise facility will stand 2 storeys (15.5 metres) high, encompassing a gross floor area of 26,626 m² on a 40,800 m² parcel. With an IT capacity of 60 MW (70.8 MW total facility load), the centre uses advanced liquid cooling to operate sustainably with a 1.18 PUE.\n\nMinimising local disturbance is a central priority. The design maintains a low plot ratio of 0.65 and 42% site coverage. To address noise and air quality, the development achieves an outstanding residential buffer score of 99/100, effectively mitigating sound and emissions from the 34 standby diesel generators. Additionally, all on-site fuel storage will adhere strictly to mandated SCDF licensing standards.\n\nWe are committed to being a considerate neighbour and keeping open channels of communication. Should you have any questions, feedback, or inquiries regarding our upcoming plans, please direct them to [Name].\n\nWarm regards,  \n\n[Name]"
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.362Z"
+    },
+    "render|image:dusk|site-1|dsp7no": {
+      "siteKey": "render|image:dusk|site-1",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T08:38:42.362Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-1-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-1|dsp7no": {
+      "siteKey": "render|video:dusk|site-1",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T08:38:42.363Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-1-dsp7no.mp4"
+      }
+    },
+    "compliance|run|site-6|dsp7no": {
+      "siteKey": "compliance|run|site-6",
+      "result": {
+        "status": "warn",
+        "summary": "Compliant with advisories. Design satisfies DC-CFA PUE, height, and plot ratio limits, but requires dedicated 66 kV grid connection for 70.8 MW, SCDF fuel storage approvals, and mandatory NEA emissions reporting.",
+        "data": {
+          "checks": [
+            {
+              "rule": "Power usage effectiveness",
+              "authority": "IMDA / EDB · DC-CFA",
+              "status": "pass",
+              "detail": "Design PUE 1.18 outperforms the DC-CFA allocation mandate of 1.30 for new facilities."
+            },
+            {
+              "rule": "Plot ratio",
+              "authority": "URA · Business 2",
+              "status": "pass",
+              "detail": "Plot ratio of 0.65 across 26,626 m² GFA remains well within the allowable 2.50 B2 limit."
+            },
+            {
+              "rule": "Building height",
+              "authority": "URA / CAAS",
+              "status": "pass",
+              "detail": "Total building height of 15.5 m across 2 storeys complies with industrial height thresholds below 50 m."
+            },
+            {
+              "rule": "Grid connection",
+              "authority": "SP Group / EMA",
+              "status": "warn",
+              "detail": "Facility load of 70.8 MW requires dedicated 66 kV intake traversing 2,249 m from Clementi Substation."
+            },
+            {
+              "rule": "Residential buffer",
+              "authority": "NEA · Environmental Protection",
+              "status": "pass",
+              "detail": "Buffer score of 99/100 meets NEA residential limits; acoustic containment is needed for 34 gensets."
+            },
+            {
+              "rule": "Water efficiency",
+              "authority": "PUB",
+              "status": "pass",
+              "detail": "Closed-loop liquid cooling delivers WUE 0.2 L/kWh and 99,233 m³/yr, safely below PUB benchmarks."
+            },
+            {
+              "rule": "BCA Green Mark DC",
+              "authority": "BCA / IMDA",
+              "status": "pass",
+              "detail": "Design PUE of 1.18 satisfies energy efficiency criteria for BCA Green Mark Platinum certification."
+            },
+            {
+              "rule": "Bulk diesel storage",
+              "authority": "SCDF",
+              "status": "warn",
+              "detail": "Fuel reserves for 34 backup gensets exceed baseline limits, mandating SCDF PFM storage licensing and QRA."
+            },
+            {
+              "rule": "Carbon tax & reporting",
+              "authority": "NEA",
+              "status": "warn",
+              "detail": "Annual emissions of 206,802 tCO2e exceed the 25,000 tCO2e threshold under Singapore's Carbon Pricing Act."
+            }
+          ]
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.366Z"
+    },
+    "comms|comms:brief|site-6|dsp7no": {
+      "siteKey": "comms|comms:brief|site-6",
+      "result": {
+        "status": "info",
+        "summary": "Stakeholder brief drafted for International Business Park.",
+        "data": {
+          "type": "brief",
+          "text": "### Opportunity\nDeployment of a $750m USD, 60 IT MW (70.8 MW facility load) hyperscale facility generating 496 GWh annually. *(Note: SiteScout lists Site A at Ubi Road 1 as the prime recommendation).*\n\n### Site\n**Site F · International Business Park** (Score: 80.6). The parcel measures 240 m × 170 m (40,800 m²), situated 108 m from Jurong Data Center and 2,249 m from Clementi Substation.\n\n### Design\n- **Structure:** 2 storeys, 15.5 m height, 0 rotation, 26,626 m² GFA, 12,750 m² footprint (42% coverage, 0.65 plot ratio).\n- **IT & Whitespace:** 4 halls, 15,000 m² white space, housing 1,333 racks at 45 kW/rack with N+1 redundancy.\n- **Cooling & Efficiency:** Closed-loop liquid cooling delivering a 1.18 PUE (meets DC-CFA 1.30 mandate and BCA Green Mark Platinum) and 0.2 WUE (99,233 m³ annual water use).\n\n### Risks\nCompliance status is **warn**:\n- **Grid Connection:** 70.8 MW facility load mandates a dedicated 66 kV intake traversing 2,249 m from Clementi Substation (SP Group / EMA).\n- **Fuel Storage:** 34 backup gensets exceed bulk diesel limits, requiring SCDF PFM storage licensing and a Quantitative Risk Assessment (QRA).\n- **Emissions & Noise:** Annual emissions of 206,802 tCO2e trigger mandatory reporting under NEA’s Carbon Pricing Act (>25,000 tCO2e threshold); acoustic containment is required for the 34 gensets (residential buffer score: 99/100).\n\n### Next steps\nSecure SP Group/EMA 66 kV intake approvals, complete SCDF PFM storage licensing and QRA, and establish NEA emissions reporting.\n\n[Name]"
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.366Z"
+    },
+    "comms|comms:community|site-6|dsp7no": {
+      "siteKey": "comms|comms:community|site-6",
+      "result": {
+        "status": "info",
+        "summary": "Community letter drafted for International Business Park.",
+        "data": {
+          "type": "community",
+          "text": "Dear Neighbours,\n\nWe are pleased to introduce our proposed data centre development at Site F · International Business Park, situated 108 metres from Jurong Data Center. \n\nThis two-storey facility is designed with a low building height of 15.5 metres and a plot ratio of 0.65 across 26,626 m² of gross floor area. Inside, it will house four data halls providing 60 MW of IT capacity, operating with an energy-efficient design power usage effectiveness (PUE) of 1.18.\n\nWe are dedicated to being a considerate neighbour and minimising disturbance to our surroundings. To manage sound levels, acoustic containment will be implemented for the facility's 34 backup gensets, supporting our 99/100 residential buffer score under National Environment Agency standards. In addition, our closed-loop liquid cooling system ensures efficient water use, capped at 99,233 m³ annually. Utility works will involve a dedicated 66 kV grid connection traversing 2,249 metres from Clementi Substation to power the 70.8 MW facility load safely.\n\nWe value open communication with our community. If you have any questions, comments, or require further details about this project, please reach out to me directly.\n\nWarm regards,  \n[Name]"
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.366Z"
+    },
+    "render|image:dusk|site-6|dsp7no": {
+      "siteKey": "render|image:dusk|site-6",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T08:38:42.366Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-6-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-6|dsp7no": {
+      "siteKey": "render|video:dusk|site-6",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T08:38:42.367Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-6-dsp7no.mp4"
+      }
+    },
+    "compliance|run|site-7|dsp7no": {
+      "siteKey": "compliance|run|site-7",
+      "result": {
+        "status": "warn",
+        "summary": "Compliant with advisories: The 60 MW facility easily satisfies DC-CFA efficiency, URA zoning, and height controls, but 34 gensets and 206,802 tCO2e trigger SCDF bulk fuel licensing and NEA carbon tax requirements.",
+        "data": {
+          "checks": [
+            {
+              "rule": "Power usage effectiveness",
+              "authority": "IMDA / EDB · DC-CFA",
+              "status": "pass",
+              "detail": "Design PUE of 1.18 comfortably beats the mandatory DC-CFA threshold of 1.30 or lower for new allocations."
+            },
+            {
+              "rule": "Plot ratio",
+              "authority": "URA · Business 2",
+              "status": "pass",
+              "detail": "Plot ratio of 0.65 for 26,626 m² GFA sits well within the allowable B2 industrial cap of 2.5."
+            },
+            {
+              "rule": "Building height",
+              "authority": "URA / CAAS",
+              "status": "pass",
+              "detail": "Proposed 15.5 m, 2-storey height stays safely clear of Loyang aeronautical and industrial height restrictions."
+            },
+            {
+              "rule": "Grid connection",
+              "authority": "SP Group / EMA",
+              "status": "pass",
+              "detail": "Located 1,887 m from Pasir Ris 66 kV substation; 70.8 MW facility demand requires dedicated 66 kV dual-feeders."
+            },
+            {
+              "rule": "Residential buffer",
+              "authority": "NEA · Pollution Control",
+              "status": "pass",
+              "detail": "Strong 96/100 buffer score; 34 standby gensets must integrate catalytic converters and silencers for boundary limits."
+            },
+            {
+              "rule": "Water efficiency",
+              "authority": "PUB",
+              "status": "pass",
+              "detail": "WUE of 0.2 L/kWh and 99,233 m³/year consumption comply with PUB water conservation guidelines for closed-loop liquid cooling."
+            },
+            {
+              "rule": "Green building certification",
+              "authority": "BCA · GM:DC",
+              "status": "pass",
+              "detail": "Sub-1.2 PUE and 0.20 WUE position the 60 MW facility for BCA-IMDA Green Mark DC Platinum certification."
+            },
+            {
+              "rule": "Diesel storage licensing",
+              "authority": "SCDF · Fire Safety Department",
+              "status": "warn",
+              "detail": "Bulk diesel inventory for 34 gensets triggers SCDF Petroleum and Flammable Materials storage licensing and Quantitative Risk Assessment."
+            },
+            {
+              "rule": "Carbon pricing and reporting",
+              "authority": "NEA · Carbon Pricing Act",
+              "status": "warn",
+              "detail": "Projected 206,802 tCO2e annual emissions substantially surpass NEA 25,000 tCO2e threshold, incurring taxable compliance obligations."
+            }
+          ]
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.373Z"
+    },
+    "comms|comms:brief|site-7|dsp7no": {
+      "siteKey": "comms|comms:brief|site-7",
+      "result": {
+        "status": "info",
+        "summary": "Stakeholder brief drafted for Loyang Way.",
+        "data": {
+          "type": "brief",
+          "text": "### Opportunity\nDevelop a 60 IT MW (70.8 facility MW) hyperscale data centre requiring USD 750m Capex. Delivering 15,000 m² white space across 1,333 racks (45 kW/rack), the facility is positioned for BCA-IMDA Green Mark DC Platinum certification.\n\n### Site\nSite G · Loyang Way (score: 80.5) occupies a 40,800 m² parcel, located 458 m from STT GDC Loyang and 1,887 m from Pasir Ris 66kV Substation, requiring dedicated 66 kV dual-feeders.\n\n### Design\nThe 2-storey, 15.5 m high build features 26,626 m² GFA (0.65 plot ratio), 12,750 m² footprint (42% coverage), and 4 halls. Utilizing liquid cooling with N+1 redundancy, it achieves a 1.18 PUE (496 GWh energy consumption) and 0.2 WUE (99,233 m³ water consumption).\n\n### Risks\nBulk diesel storage for 34 gensets triggers SCDF Petroleum and Flammable Materials licensing and a Quantitative Risk Assessment. Annual emissions of 206,802 tCO2e surpass the NEA 25,000 tCO2e threshold, incurring carbon tax liabilities. Residential buffers require silencers and catalytic converters.\n\n### Next steps\nAdvance SCDF licensing and Quantitative Risk Assessment filings, coordinate 66 kV dual-feeder grid connection with SP Group/EMA, and structure reporting under the NEA Carbon Pricing Act.\n\n[Name]"
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.373Z"
+    },
+    "comms|comms:community|site-7|dsp7no": {
+      "siteKey": "comms|comms:community|site-7",
+      "result": {
+        "status": "info",
+        "summary": "Community letter drafted for Loyang Way.",
+        "data": {
+          "type": "community",
+          "text": "Dear Neighbours,\n\nWe are pleased to introduce the proposed data centre project at Site G · Loyang Way. \n\nThe planned 60 MW facility will comprise a 2-storey building standing at 15.5 metres tall, with a gross floor area of 26,626 m² on a 40,800 m² parcel. Designed with an efficient closed-loop liquid cooling system and a modest plot ratio of 0.65, the development is planned to integrate smoothly into the area.\n\nWe are committed to minimising disturbances to nearby residents and businesses. The site benefits from a 96/100 residential buffer score. To address potential noise and exhaust, all 34 standby generators will be fitted with silencers and catalytic converters to meet strict boundary limits. Power supply work involves dedicated dual-feeders connecting 1,887 metres to the Pasir Ris 66 kV Substation, keeping operational impacts contained.\n\nMaintaining an open dialogue with our community is important to us. If you have questions or wish to discuss the project, please reach out to us.\n\nWarm regards,  \n\n[Name]"
+        }
+      },
+      "createdAt": "2026-09-30T08:38:42.373Z"
+    },
+    "render|image:dusk|site-7|dsp7no": {
+      "siteKey": "render|image:dusk|site-7",
+      "result": {
+        "status": "info",
+        "summary": "Concept render ready (dusk) — 60 MW campus.",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T08:38:42.373Z",
+      "media": {
+        "type": "image",
+        "file": "render-image-dusk-site-7-dsp7no.jpg"
+      }
+    },
+    "render|video:dusk|site-7|dsp7no": {
+      "siteKey": "render|video:dusk|site-7",
+      "result": {
+        "status": "info",
+        "summary": "Omni flythrough ready (dusk).",
+        "data": {}
+      },
+      "createdAt": "2026-09-30T08:40:07.162Z",
+      "media": {
+        "type": "video",
+        "file": "render-video-dusk-site-7-dsp7no.mp4"
+      }
+    }
+  }
+}

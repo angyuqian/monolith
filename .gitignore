@@ -1,0 +1,6 @@
+# raw OSM export is 135MB (over GitHub's 100MB limit) — share separately; data/build/ is what the app loads
+data/sg_buildings_v5.geojson
+.DS_Store
+node_modules/
+# local secrets (see config.local.example.js)
+config.local.js

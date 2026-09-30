@@ -1,0 +1,14 @@
+{
+  "name": "monolith-demo",
+  "private": true,
+  "type": "module",
+  "description": "Monolith — data centre siting & design studio (static app; npm is only needed for the prewarm script)",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "prewarm": "node scripts/prewarm.mjs",
+    "data": "python3 scripts/prep_data.py"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}
