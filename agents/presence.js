@@ -1,7 +1,8 @@
 // Multiplayer mode (mock) — Figma/Miro-style live cursors for agents and teammates.
 // Purely visual: nothing here changes app state. Agent cursors are driven by real events
 // (agent started / finished) and anchored to real positions (sites, parcel, massing, panels).
-// Human cursors ("Andrew", "Sammie") run scripted idle behaviours.
+// Teammate cursors follow a deliberate storyline: each beat points at something specific
+// (Site D's grid, the compliance warning, a rubric weight…) and is skipped if it isn't on screen.
 // Toggle: avatar row in the top bar, or press M. Reset turns it off.
 import { esc } from '../js/ui/toast.js';
 
@@ -25,9 +26,12 @@ let marquee = null;
 let agentSlots = 0;
 const waiting = [];     // agent scripts waiting for a free cursor slot
 const results = new Map();
+const once = new Set(); // beats that should only happen once per session (pins, highlights)
 
 const sleep = (ms, ep = epoch) => new Promise((r) => setTimeout(r, ms)).then(() => { if (ep !== epoch) throw new Error('stopped'); });
 const rand = (a, b) => a + Math.random() * (b - a);
+const ease = (k) => (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
+const q = (sel) => document.querySelector(sel);
 
 // ---------------------------------------------------------------- targets (functions -> screen point)
 function stageRect() { return app.ui.slots.stage.getBoundingClientRect(); }
@@ -43,6 +47,11 @@ function reveal(el) {
   el?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
   return el;
 }
+function visible(el) {
+  if (!el?.isConnected) return false;
+  const b = el.getBoundingClientRect();
+  return b.width > 0 && b.height > 0 && b.bottom > 60 && b.top < window.innerHeight;
+}
 function dom(getEl, fx = 0.5, fy = 0.5, dx = 0, dy = 0) {
   return () => {
     const el = typeof getEl === 'function' ? getEl() : getEl;
@@ -52,9 +61,9 @@ function dom(getEl, fx = 0.5, fy = 0.5, dx = 0, dy = 0) {
     return { x: b.left + b.width * fx + dx, y: b.top + b.height * fy + dy };
   };
 }
-function stagePoint(fx, fy) {
-  return () => { const r = stageRect(); return { x: r.left + r.width * fx, y: r.top + r.height * fy }; };
-}
+const letterOf = (s) => String.fromCharCode(65 + app.store.get().sites.findIndex((x) => x.id === s.id));
+const siteBy = (letter) => app.store.get().sites[letter.charCodeAt(0) - 65];
+const shortName = (s) => s.name.split(' · ')[1] || s.name;
 const parcelRing = () => app.store.get().design?.geojson.lines.features[0]?.geometry.coordinates || null;
 function massBBox() {
   const d = app.store.get().design;
@@ -68,7 +77,7 @@ function massBBox() {
   return { x: r.left + x0 - 14, y: r.top + y0 - 34, w: x1 - x0 + 28, h: y1 - y0 + 48 }; // pad up for extrusion height
 }
 
-// ---------------------------------------------------------------- cursors
+// ---------------------------------------------------------------- cursors (eased, deliberate motion)
 function cursor(id, name, color) {
   if (cursors.has(id)) return cursors.get(id);
   const el = document.createElement('div');
@@ -77,11 +86,18 @@ function cursor(id, name, color) {
   el.innerHTML = `${ARROW(color)}<div class="p-cursor__tag"><b>${esc(name)}</b><span class="p-cursor__say"></span></div>`;
   layer.appendChild(el);
   const r = stageRect();
-  const start = { x: r.left + (Math.random() < 0.5 ? -40 : r.width + 40), y: r.top + rand(0.2, 0.8) * r.height };
-  const c = { id, el, color, pos: { ...start }, target: () => start, lastT: start, jitter: 0, say: el.querySelector('.p-cursor__say') };
+  const start = { x: r.left + (Math.random() < 0.5 ? 40 : r.width - 40), y: r.top + r.height - 40 };
+  const c = { id, name, el, color, pos: { ...start }, from: { ...start }, t0: 0, dur: 1, target: () => start, lastT: start, say: el.querySelector('.p-cursor__say') };
   cursors.set(id, c);
   requestAnimationFrame(() => el.classList.add('is-on'));
   return c;
+}
+function setTarget(c, target) {
+  const t = target() || c.lastT;
+  c.from = { ...c.pos };
+  c.t0 = performance.now();
+  c.dur = Math.max(420, Math.min(1300, Math.hypot(t.x - c.pos.x, t.y - c.pos.y) * 1.1));
+  c.target = target;
 }
 function removeCursor(id) {
   const c = cursors.get(id);
@@ -94,20 +110,15 @@ function say(c, text) {
   c.say.textContent = text || '';
   c.el.classList.toggle('has-say', !!text);
 }
-async function moveTo(c, target, { timeout = 2600, ep = epoch } = {}) {
-  c.target = target;
-  const t0 = performance.now();
-  while (performance.now() - t0 < timeout) {
-    await sleep(60, ep);
-    const t = c.lastT;
-    if (t && Math.hypot(t.x - c.pos.x, t.y - c.pos.y) < 2) return;
-  }
+async function moveTo(c, target, { ep = epoch } = {}) {
+  setTarget(c, target);
+  await sleep(c.dur + 80, ep);
 }
 async function click(c) {
   c.el.classList.remove('is-click');
   void c.el.offsetWidth;
   c.el.classList.add('is-click');
-  await sleep(220);
+  await sleep(260);
 }
 
 // ---------------------------------------------------------------- pins, marquee, text
@@ -120,7 +131,7 @@ function pin(lng, lat, author, color, text) {
   const p = { el, pos: geo(lng, lat) };
   pins.push(p);
   requestAnimationFrame(() => el.classList.add('is-on'));
-  setTimeout(() => el.classList.add('is-collapsed'), 5500);
+  setTimeout(() => el.classList.add('is-collapsed'), 6000);
   return p;
 }
 function showMarquee(color, label) {
@@ -156,10 +167,10 @@ async function typeInto(container, text, c, before = null) {
   p.append(span, caret);
   container.insertBefore(p, before);
   p.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  c.target = dom(caret, 1, 0.9, 2, 2);
+  setTarget(c, dom(caret, 1, 0.9, 2, 2));
   for (const ch of text) {
     span.textContent += ch;
-    await sleep(rand(28, 70));
+    await sleep(rand(30, 65));
   }
   await sleep(900);
   caret.remove();
@@ -168,21 +179,21 @@ async function typeInto(container, text, c, before = null) {
 // ---------------------------------------------------------------- frame loop
 function frame(t) {
   if (!on) return;
-  const time = t / 1000;
   cursors.forEach((c) => {
     const target = c.target() || c.lastT;
     if (!target) return;
     c.lastT = target;
-    const wob = 2.2;
-    const tx = target.x + Math.sin(time * 1.3 + c.id.length) * wob;
-    const ty = target.y + Math.cos(time * 1.1 + c.id.length * 2) * wob;
-    c.pos.x += (tx - c.pos.x) * 0.13;
-    c.pos.y += (ty - c.pos.y) * 0.13;
+    const k = Math.min(1, (t - c.t0) / c.dur);
+    const e = ease(k);
+    // eased glide to the target, then a barely-there idle drift
+    const drift = k >= 1 ? 0.7 : 0;
+    c.pos.x = c.from.x + (target.x - c.from.x) * e + Math.sin(t / 900 + c.id.length) * drift;
+    c.pos.y = c.from.y + (target.y - c.from.y) * e + Math.cos(t / 1100 + c.id.length) * drift;
     c.el.style.transform = `translate(${c.pos.x}px, ${c.pos.y}px)`;
   });
   pins.forEach((p) => {
-    const q = p.pos();
-    if (q) p.el.style.transform = `translate(${q.x}px, ${q.y}px)`;
+    const pt = p.pos();
+    if (pt) p.el.style.transform = `translate(${pt.x}px, ${pt.y}px)`;
   });
   if (marquee) {
     const b = massBBox();
@@ -196,7 +207,6 @@ function frame(t) {
 }
 
 // ---------------------------------------------------------------- agent choreography
-function agentMeta(id) { return app.registry.agent(id); }
 const done = (id) => results.has(id);
 
 async function withSlot(fn) {
@@ -220,17 +230,17 @@ async function workUntilDone(id, step) {
 
 const SCRIPTS = {
   async siteScout(c) {
-    const sites = app.store.get().sites;
-    say(c, 'Comparing sites…');
+    const ranked = [...app.store.get().sites].sort((a, b) => b.score - a.score).slice(0, 4);
     const r = await workUntilDone('siteScout', async (i) => {
-      const s = sites[[0, 5, 6, 1, 2, 4][i % 6]];
+      const s = ranked[i % ranked.length];
       await moveTo(c, geo(s.lng, s.lat, 4, -20));
-      await sleep(450);
+      say(c, `Site ${letterOf(s)} · ${s.score.toFixed(0)}`);
+      await sleep(700);
     });
-    const best = sites.find((s) => s.id === r?.data?.recommended_site_id) || sites[0];
+    const best = app.store.get().sites.find((s) => s.id === r?.data?.recommended_site_id) || ranked[0];
     await moveTo(c, geo(best.lng, best.lat, 4, -20));
     await click(c);
-    say(c, `Recommends ${best.name.split(' · ')[0]}`);
+    say(c, `Recommends Site ${letterOf(best)}`);
     await sleep(2200);
   },
 
@@ -242,29 +252,28 @@ const SCRIPTS = {
       const pt = ring[i % 4];
       if (i === 4) say(c, 'Measuring height…');
       if (i === 8) say(c, 'Reviewing grid & noise…');
-      await moveTo(c, geo(pt[0], pt[1]), { timeout: 1600 });
-      await sleep(250);
+      await moveTo(c, geo(pt[0], pt[1]));
+      await sleep(200);
     });
     const checks = r?.data?.checks || [];
     const icon = { pass: '✓', warn: '⚠', fail: '✕' };
     const picks = [checks.find((x) => /setback|plot/i.test(x.rule)), checks.find((x) => /height/i.test(x.rule)), checks.find((x) => x.status !== 'pass')].filter(Boolean);
-    const spots = [ring[0], ring[1], ring[2]];
     for (let i = 0; i < Math.min(3, picks.length); i++) {
-      await moveTo(c, geo(spots[i][0], spots[i][1]), { timeout: 1400 });
+      await moveTo(c, geo(ring[i][0], ring[i][1]));
       await click(c);
-      pin(spots[i][0], spots[i][1], 'Compliance', c.color, `${picks[i].rule} ${icon[picks[i].status] || ''}`);
+      pin(ring[i][0], ring[i][1], 'Compliance', c.color, `${picks[i].rule} ${icon[picks[i].status] || ''}`);
+      await sleep(350);
     }
     say(c, r?.status === 'fail' ? 'Blocking issues found' : 'Checks complete');
     await sleep(1800);
   },
 
   async render(c) {
-    const b = () => massBBox();
-    if (!b()) return;
-    await moveTo(c, () => { const q = b(); return q && { x: q.x, y: q.y }; });
+    if (!massBBox()) return;
+    await moveTo(c, () => { const b = massBBox(); return b && { x: b.x, y: b.y }; });
     showMarquee(c.color, 'Render Studio · framing shot');
     say(c, 'Framing shot…');
-    c.target = () => { const q = b(); return q && { x: q.x + q.w, y: q.y + q.h }; };
+    await moveTo(c, () => { const b = massBBox(); return b && { x: b.x + b.w, y: b.y + b.h }; });
     await workUntilDone('render', async (i) => {
       await sleep(700);
       if (i === 3) say(c, 'Lighting: dusk…');
@@ -274,17 +283,17 @@ const SCRIPTS = {
     say(c, 'Render ready ✓');
     await sleep(1400);
     hideMarquee();
-    await sleep(600);
+    await sleep(500);
   },
 
   async comms(c) {
-    const card = () => document.querySelector('[data-agent="comms"]');
+    const card = () => q('[data-agent="comms"]');
     reveal(card());
     await moveTo(c, dom(card, 0.3, 0.4));
     say(c, 'Drafting…');
     await workUntilDone('comms', async () => { await sleep(500); });
     await sleep(700); // let the card render the draft
-    const doc = document.querySelector('[data-agent="comms"] [data-result] .doc');
+    const doc = q('[data-agent="comms"] [data-result] .doc');
     if (!doc) { await sleep(800); return; }
     const para = doc.querySelector('li') || doc.querySelector('p');
     reveal(doc.closest('[data-agent]'));
@@ -304,7 +313,7 @@ const SCRIPTS = {
 };
 
 async function runAgentCursor(id) {
-  const meta = agentMeta(id);
+  const meta = app.registry.agent(id);
   const script = SCRIPTS[id];
   if (!meta || !script || cursors.has(id)) return;
   const ep = epoch;
@@ -316,88 +325,143 @@ async function runAgentCursor(id) {
   });
 }
 
-// ---------------------------------------------------------------- humans (visual only)
-const once = new Set();
-const HUMAN_BEHAVIOURS = {
-  async wander(c) {
-    await moveTo(c, stagePoint(rand(0.2, 0.8), rand(0.2, 0.7)));
-    await sleep(rand(600, 1400));
-  },
-  async visitSite(c) {
-    const sites = app.store.get().sites;
-    const s = sites[Math.floor(rand(0, sites.length))];
-    await moveTo(c, geo(s.lng, s.lat, 6, -18));
-    say(c, `Looking at ${s.name.split(' · ')[0]}`);
-    await sleep(1500);
-    say(c, '');
-  },
-  async commentParcel(c) {
-    const ring = parcelRing();
-    const d = app.store.get().design;
-    if (!ring || once.has(`pin-${c.id}`)) return HUMAN_BEHAVIOURS.wander(c);
-    once.add(`pin-${c.id}`);
-    const mid = [(ring[0][0] + ring[2][0]) / 2, (ring[0][1] + ring[2][1]) / 2];
-    const spot = c.id === 'andrew' ? mid : ring[3];
-    await moveTo(c, geo(spot[0], spot[1]));
-    await click(c);
-    pin(spot[0], spot[1], c.name, c.color, c.id === 'andrew' ? `Could we fit ${d.params.halls + 2} halls here?` : 'Love the green buffer to the road 🌿');
-    await sleep(1500);
-  },
-  async nudgeSlider(c) {
-    const input = document.querySelector('#left-panel input[data-param="itMW"]');
-    if (!input || once.has('slider')) return HUMAN_BEHAVIOURS.wander(c);
-    once.add('slider');
-    const frac = (input.value - input.min) / (input.max - input.min);
-    const at = (f) => dom(input, f, 0.5);
-    await moveTo(c, at(frac));
-    say(c, `IT load ${input.value} → ${Math.min(+input.max, +input.value + 10)} MW?`);
-    c.el.classList.add('is-drag');
-    await moveTo(c, at(Math.min(1, frac + 0.09)), { timeout: 1500 });
-    await sleep(900);
-    await moveTo(c, at(frac), { timeout: 1500 });
-    c.el.classList.remove('is-drag');
-    await sleep(1400);
-    say(c, '');
-  },
-  async selectText(c) {
-    const el = document.querySelector('[data-agent="compliance"] [data-summary]');
-    if (!el?.textContent.trim() || once.has(`sel-${c.id}`)) return HUMAN_BEHAVIOURS.hoverCard(c);
-    once.add(`sel-${c.id}`);
-    reveal(el.closest('[data-agent]'));
-    await sleep(400);
-    await moveTo(c, dom(el, 0.95, 0.8));
-    const unmark = highlight(el, c.color);
-    say(c, 'Sharing with legal 👍');
-    await sleep(2600);
-    unmark?.();
-    say(c, '');
-  },
-  async hoverCard(c) {
-    const cards = [...document.querySelectorAll('#agents-list [data-agent]')];
-    const card = cards[Math.floor(rand(0, cards.length))];
-    await moveTo(c, dom(card, rand(0.3, 0.8), 0.5));
-    await sleep(rand(900, 1600));
-  },
+// ---------------------------------------------------------------- teammates: deliberate storyline (visual only)
+// Each beat: when() -> target element/point or null (skip), then say / click / pin / highlight.
+const warnRow = () => [...document.querySelectorAll('[data-agent="compliance"] .check')].find((r) => r.querySelector('.pill--warn, .pill--fail'));
+
+const STORY = {
+  andrew: [
+    {
+      id: 'siteD',
+      when: () => siteBy('D'),
+      go: (s) => geo(s.lng, s.lat, 6, -22),
+      say: (s) => `Site D — ${s.nearestSubstation.name.replace(/ Substation$/, '')} is right there`,
+      click: true,
+      pin: (s) => [s.lng, s.lat, `Check grid headroom at ${shortName(s)}`],
+    },
+    {
+      id: 'complianceWarn',
+      when: () => { const r = warnRow(); if (r) reveal(r); return r && visible(r) ? r : null; },
+      go: (el) => dom(el, 0.96, 0.35),
+      say: (el) => `${el.querySelector('.check__rule')?.firstChild?.textContent.trim() || 'This'} is our critical path`,
+    },
+    {
+      id: 'complianceCard',
+      when: () => (!warnRow() && q('[data-agent="compliance"]') && visible(q('[data-agent="compliance"]')) ? q('[data-agent="compliance"]') : null),
+      go: (el) => dom(el, 0.7, 0.3),
+      say: () => 'Can we run compliance on this one?',
+    },
+    {
+      id: 'weakestBar', // points at the lowest-scoring criterion of the selected site
+      when: () => {
+        const rows = [...document.querySelectorAll('.site-detail .bars > div')].filter(visible);
+        const val = (r) => Number(r.querySelector('.bar__head span:last-child')?.textContent) || 0;
+        return rows.sort((x, y) => val(x) - val(y))[0] || null;
+      },
+      go: (el) => dom(el, 0.8, 0.3),
+      say: (el) => `${el.querySelector('.bar__head span')?.textContent} is the weak spot (${el.querySelector('.bar__head span:last-child')?.textContent})`,
+    },
+    {
+      id: 'parcel',
+      when: () => parcelRing(),
+      go: (ring) => geo((ring[0][0] + ring[2][0]) / 2, (ring[0][1] + ring[2][1]) / 2),
+      say: () => 'Room for more halls?',
+      click: true,
+      pin: (ring) => [(ring[0][0] + ring[2][0]) / 2, (ring[0][1] + ring[2][1]) / 2, `Could we fit ${app.store.get().design.params.halls + 2} halls here?`],
+    },
+    {
+      id: 'slider',
+      when: () => { const i = q('#left-panel input[data-param="itMW"]'); return i && visible(i) ? i : null; },
+      go: (el) => dom(el, (el.value - el.min) / (el.max - el.min), 0.5),
+      say: (el) => `IT load ${el.value} → ${Math.min(+el.max, +el.value + 10)} MW?`,
+    },
+    {
+      id: 'siteF',
+      when: () => { const el = q('.site-item[data-site="site-6"]'); return el && visible(el) ? el : null; },
+      go: (el) => dom(el, 0.55, 0.5),
+      say: () => 'F keeps us near the Jurong talent pool',
+    },
+  ],
+  sammie: [
+    {
+      id: 'score',
+      when: () => { const el = q('.site-detail__score'); return el && visible(el) ? el : null; },
+      go: (el) => dom(el, 0.9, 0.35),
+      say: () => `${app.store.get().site?.score.toFixed(0)} — strongest in the cluster`,
+    },
+    {
+      id: 'complianceSummary',
+      when: () => { const el = q('[data-agent="compliance"] [data-summary]'); if (el?.textContent.trim()) reveal(el.closest('[data-agent]')); return el?.textContent.trim() && visible(el) ? el : null; },
+      go: (el) => dom(el, 0.95, 0.8),
+      say: () => 'Sharing this with legal 👍',
+      highlight: true,
+    },
+    {
+      id: 'siteA',
+      when: () => siteBy('A'),
+      go: (s) => geo(s.lng, s.lat, 6, -22),
+      say: (s) => `A is ${s.nearestDataCentre.distanceM} m from the nearest DC`,
+      click: true,
+    },
+    {
+      id: 'renderImage',
+      when: () => { const el = q('[data-agent="render"] .media-result img, [data-agent="render"] .media-result video'); if (el) reveal(el); return el && visible(el) ? el : null; },
+      go: (el) => dom(el, 0.8, 0.3),
+      say: () => 'This render goes in the deck',
+    },
+    {
+      id: 'topPick',
+      when: () => { const el = q('#left-panel .site-item'); return el && visible(el) ? el : null; },
+      go: (el) => dom(el, 0.85, 0.5),
+      say: () => 'Top of the shortlist'
+    },
+    {
+      id: 'legend',
+      when: () => { const el = q('.legend__ramp'); return el && visible(el) ? el : null; },
+      go: (el) => dom(el, 0.85, 0.5),
+      say: () => 'Darker cells = better fit',
+    },
+  ],
 };
+
+async function beat(c, b) {
+  const subject = b.when();
+  if (!subject) return false;
+  await moveTo(c, b.go(subject));
+  say(c, b.say(subject));
+  if (b.click) await click(c);
+  let unmark = null;
+  if (b.pin && !once.has(`${c.id}-${b.id}`)) {
+    once.add(`${c.id}-${b.id}`);
+    const [lng, lat, text] = b.pin(subject);
+    pin(lng, lat, c.name, c.color, text);
+  }
+  if (b.highlight) unmark = highlight(subject, c.color);
+  await sleep(2600);
+  unmark?.();
+  say(c, '');
+  return true;
+}
 
 async function humanLoop(h) {
   const ep = epoch;
   const c = cursor(h.id, h.name, h.color);
-  const plan = h.id === 'andrew'
-    ? ['wander', 'visitSite', 'commentParcel', 'nudgeSlider', 'hoverCard', 'wander']
-    : ['hoverCard', 'wander', 'selectText', 'commentParcel', 'visitSite', 'wander'];
-  let i = h.id === 'andrew' ? 0 : 2;
+  const story = STORY[h.id];
+  let i = 0;
   try {
-    await sleep(h.id === 'andrew' ? 300 : 1400, ep);
+    await sleep(h.id === 'andrew' ? 400 : 2200, ep);
     for (;;) {
-      if (agentSlots >= 2) { await sleep(1200, ep); continue; } // stay out of the way while agents work
-      await HUMAN_BEHAVIOURS[plan[i++ % plan.length]](c);
-      await sleep(rand(1500, 3500), ep);
+      if (agentSlots >= 2) { await sleep(1200, ep); continue; } // step aside while agents work
+      let acted = false;
+      for (let n = 0; n < story.length && !acted; n++) acted = await beat(c, story[i++ % story.length]);
+      await sleep(acted ? rand(1600, 2600) : 1500, ep);
     }
   } catch { /* stopped */ }
 }
 
 // ---------------------------------------------------------------- toggle + facepile
+const ui = {};
+
 function renderFacepile() {
   const agents = app.registry.visibleAgents();
   const faces = [...HUMANS.map((h) => ({ label: h.name[0], color: h.color, title: h.name })), ...agents.map((a) => ({ label: a.icon, color: a.color, title: a.name }))];
@@ -406,7 +470,6 @@ function renderFacepile() {
   ui.btn.innerHTML = `<span class="facepile">${faces.slice(0, 5).map((f, i) => `<span class="facepile__face" style="--c:${f.color};z-index:${10 - i}" title="${esc(f.title)}">${f.label}</span>`).join('')}</span>
     <span class="facepile__label">${on ? `<i class="facepile__live"></i>${faces.length} online` : 'Multiplayer'}</span>`;
 }
-const ui = {};
 
 function start() {
   on = true;

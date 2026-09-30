@@ -52,7 +52,11 @@ function initClickRouter(adapter, actions) {
       popup.setLngLat(e.lngLat).setHTML(`<div class="pop__title">${f.properties.label || f.properties.kind}</div><div class="pop__meta">Proposed · ${f.properties.h} m</div>`).addTo(map);
     } else if (id === 'suit-fill' && store.get().stage !== 'review') {
       popup.remove();
-      const known = store.get().sites.find((s) => s.cellId === f.properties.id);
+      // snap clicks within ~400 m of a candidate site to that site (so it uses the pre-rendered cache)
+      const { cx, cy } = f.properties;
+      const near = (s) => Math.hypot((s.lng - cx) * 111320 * Math.cos((cy * Math.PI) / 180), (s.lat - cy) * 110574);
+      const known = store.get().sites.find((s) => s.cellId === f.properties.id)
+        || store.get().sites.filter((s) => near(s) < 400).sort((a, b) => near(a) - near(b))[0];
       actions.selectSite(known || cellToSite(f.properties));
     } else if (id.startsWith('bld')) {
       popup.setLngLat(e.lngLat).setHTML(buildingPopupHTML(f.properties)).addTo(map);
