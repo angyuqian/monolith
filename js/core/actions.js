@@ -99,7 +99,9 @@ export function createActions(adapter, getCtx) {
           console.warn(`[agent:${id}]`, err);
           if (CONFIG.DEMO_FALLBACK && fallback) {
             result = { ...(await fallback(ctx)), offline: true };
-            ctx.ui.toast(`${agent?.name || id}: Gemini unavailable — showing demo output`, { kind: 'warn' });
+            ctx.ui.toast(err.quota
+              ? `${agent?.name || id}: this Gemini key's plan has no quota for it (enable billing) — showing demo output`
+              : `${agent?.name || id}: Gemini unavailable — showing demo output`, { kind: 'warn', ms: 5000 });
           } else {
             result = { status: 'error', summary: err.message || String(err) };
           }

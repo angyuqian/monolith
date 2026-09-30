@@ -9,7 +9,13 @@ import { CONFIG } from '../../config.js';
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
-export class GeminiError extends Error {}
+export class GeminiError extends Error {
+  constructor(message, status = 0) {
+    super(message);
+    this.status = status;
+    this.quota = status === 429 || /quota/i.test(message);
+  }
+}
 
 async function request(path, { method = 'POST', body, timeout = 45000 } = {}) {
   if (!CONFIG.GEMINI_KEY) throw new GeminiError('No Gemini API key set');
@@ -23,10 +29,10 @@ async function request(path, { method = 'POST', body, timeout = 45000 } = {}) {
       signal: ctrl.signal,
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new GeminiError(data?.error?.message || `HTTP ${res.status}`);
+    if (!res.ok) throw new GeminiError(data?.error?.message || `HTTP ${res.status}`, res.status);
     return data;
   } catch (e) {
-    if (e.name === 'AbortError') throw new GeminiError(`Timed out after ${timeout / 1000}s`);
+    if (e.name === 'AbortError') throw new GeminiError(`Timed out after ${timeout / 1000}s`, 408);
     throw e;
   } finally {
     clearTimeout(timer);
@@ -68,8 +74,35 @@ function toContents(input) {
   return input;
 }
 
+// Text requests fall back through CONFIG.MODELS.textFallbacks when a model is overloaded (503) or out of
+// quota (429). A failing model is skipped for a few minutes so a conversation stays on one working model.
+const cooldown = new Map(); // model -> retry-after timestamp
+const COOLDOWN_MS = 5 * 60 * 1000;
+const retryable = (e) => [408, 429, 500, 502, 503, 504].includes(e.status);
+const ATTEMPT_MS = 25000; // per-model cap while other models remain to try
+
 export async function generate(input, opts = {}) {
-  const { system, tools, json, schema, model = CONFIG.MODELS.text, temperature, timeout } = opts;
+  if (opts.model) return generateWith(opts.model, input, opts);
+  const chain = [CONFIG.MODELS.text, ...(CONFIG.MODELS.textFallbacks || [])];
+  const now = Date.now();
+  const order = [...chain.filter((m) => !(cooldown.get(m) > now)), ...chain.filter((m) => cooldown.get(m) > now)];
+  let last;
+  for (const [i, model] of order.entries()) {
+    const isLast = i === order.length - 1;
+    try {
+      return await generateWith(model, input, isLast ? opts : { ...opts, timeout: Math.min(opts.timeout ?? 45000, ATTEMPT_MS) });
+    } catch (e) {
+      last = e;
+      if (!retryable(e)) throw e;
+      cooldown.set(model, Date.now() + COOLDOWN_MS);
+      console.warn(`[gemini] ${model} unavailable (${e.status}); trying the next model`);
+    }
+  }
+  throw last;
+}
+
+async function generateWith(model, input, opts) {
+  const { system, tools, json, schema, temperature, timeout } = opts;
   const body = { contents: toContents(input), generationConfig: {} };
   if (system) body.systemInstruction = { parts: [{ text: system }] };
   if (tools?.length) {

@@ -18,6 +18,7 @@ import { initMapControls } from './ui/mapControls.js';
 import { initLeftPanel } from './ui/leftPanel.js';
 import { initAgentHub } from './ui/agentHub.js';
 import { initAgentOverlay } from './ui/agentOverlay.js';
+import { initHelp } from './ui/help.js';
 import { toast, lightbox } from './ui/toast.js';
 import { AGENTS } from '../agents/index.js';
 
@@ -107,6 +108,7 @@ async function boot() {
   initLeftPanel(ctx);
   initAgentHub(ctx, orchestrator);
   initAgentOverlay(ctx);
+  initHelp(ctx);
   // agents that add UI outside their hub card (e.g. the voice mic in the command bar)
   registry.agents().forEach((a) => { try { a.init?.(ctx); } catch (e) { console.error(`[agent:${a.id}] init failed`, e); } });
   initClickRouter(adapter, actions);

@@ -1,22 +1,20 @@
 // Monolith runtime config. Everything is client-side.
 //
+// Keys are never committed (GitHub reports public keys to Google, which disables them).
 // Where the Gemini key comes from, first match wins:
-//   1. config.local.js (gitignored)  ->  export default { GEMINI_KEY: '...', GOOGLE_MAPS_KEY: '' }
-//   2. ?key=... in the page URL (remembered in this browser, then removed from the address bar)
-//   3. the browser's saved key: click the Gemini status pill in the top bar to enter it
-//   4. HACKATHON_KEY below — a shared key, intentionally public so the GitHub Pages demo works as-is.
-//      Rotate it after the event; if Google disables it, set a new one in config.local.js or via ?key=.
-const HACKATHON_KEY = 'AQ.Ab8RN6KOZ_X6A5E1N1hGs8yLcbIPYtQtWYNfGe1f0fMC6_z-vg';
+//   1. ?key=... in the page URL (remembered in this browser, then removed from the address bar)
+//   2. the browser's saved key: click the Gemini status pill in the top bar to enter it
+//   3. config.local.js (gitignored) -> export default { GEMINI_KEY: '...' }
+//      On GitHub Pages, the deploy workflow (.github/workflows/pages.yml) writes this file from the
+//      GEMINI_KEY repository secret, so the hosted site works for visitors without setup.
 
-// On GitHub Pages there is no config.local.js or local render cache; skip those requests (avoids 404 noise).
+// GitHub Pages has no local render cache (it's gitignored); skip that request there.
 export const IS_HOSTED = typeof location !== 'undefined' && /\.github\.io$/.test(location.hostname);
 
 let local = {};
-if (!IS_HOSTED) {
-  try {
-    local = (await import('./config.local.js')).default || {};
-  } catch { /* not present */ }
-}
+try {
+  local = (await import('./config.local.js')).default || {};
+} catch { /* not present: no key unless provided via URL or the Gemini pill */ }
 
 const KEY_STORAGE = 'monolith.geminiKey';
 
@@ -44,7 +42,7 @@ export function setGeminiKey(key) {
 
 export const CONFIG = {
   // Gemini API key (AI Studio / generativelanguage.googleapis.com).
-  GEMINI_KEY: local.GEMINI_KEY || browserKey() || HACKATHON_KEY,
+  GEMINI_KEY: browserKey() || local.GEMINI_KEY || '',
 
   // Google Maps JS key ("AIza..."), with Maps JavaScript API + Map Tiles API enabled.
   // Leave empty to hide the Photoreal 3D view. The Gemini key does NOT work for Maps.
@@ -58,6 +56,7 @@ export const CONFIG = {
 
   MODELS: {
     text: 'gemini-3.8-flash',          // orchestrator, agents (generateContent)
+    textFallbacks: ['gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite'], // tried in order if busy / out of quota
     image: 'gemini-3.1-flash-image',   // concept renders (Nano Banana)
     omni: 'gemini-omni-1.1-flash',     // flythrough video (Interactions API)
     video: 'veo-3.1-fast-generate-preview', // alternative video path (long-running op)

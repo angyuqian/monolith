@@ -1,6 +1,6 @@
 # Monolith: Data Centre Studio
 
-**Live demo:** https://angyuqian.github.io/monolith/ (works as-is; see [what's pre-loaded](#whats-pre-loaded-where))
+**Live demo:** https://angyuqian.github.io/monolith/ opens with a short **Help** guide and works without any setup. See [what's pre-loaded](#whats-pre-loaded-where).
 
 Monolith finds a site in Singapore for a hyperscale data centre, designs the building on it, and hands the proposal to a team of AI agents. The agents check compliance, render photoreal images and flythrough videos, and draft stakeholder and investor communications. You drive it by clicking, typing, or talking.
 
@@ -10,7 +10,7 @@ Monolith finds a site in Singapore for a hyperscale data centre, designs the bui
 
 | Job | Model |
 |---|---|
-| Chat orchestrator and agents | `gemini-3.8-flash` |
+| Chat orchestrator and agents | `gemini-3.8-flash`, with automatic fallback to 3.7 / 3.6 / 3.5 / 3-preview / 3.5-lite when busy |
 | Concept renders ("Nano Banana") | `gemini-3.1-flash-image` |
 | Flythrough videos, via the Interactions API | `gemini-omni-1.1-flash` |
 | Voice, via the Live API | `gemini-3.8-live` |
@@ -41,13 +41,15 @@ Monolith finds a site in Singapore for a hyperscale data centre, designs the bui
 
 ```bash
 git clone https://github.com/angyuqian/monolith.git && cd monolith
+cp config.local.example.js config.local.js   # paste a Gemini API key into GEMINI_KEY
 npm start                                    # = python3 -m http.server 8000 (any static server works)
 ```
 
 Open **http://localhost:8000 in Chrome**. Chrome is recommended for voice and video. The first load takes about 7 s while it loads the city model.
 
-- **Gemini key:** a shared hackathon key is built into `config.js` (`HACKATHON_KEY`), so it works immediately. To use your own, `cp config.local.example.js config.local.js` and set `GEMINI_KEY`. That file is gitignored.
-- **If Gemini is unreachable,** the app still runs. Map, design and metrics work fully, and AI features show canned demo output instead of failing.
+- **Gemini key:** get one at https://aistudio.google.com/apikey. **Never commit it**: GitHub reports public keys to Google, which disables them within minutes. `config.local.js` is gitignored.
+- **Images and video need billing.** On Google's free tier, text and voice work, but Nano Banana renders and Omni flythroughs have a quota of 0. Enable billing on the key's Google Cloud project for renders.
+- **If Gemini is unreachable or busy,** the app still runs. Text requests fall back to other Gemini models automatically, and anything that still fails shows canned demo output with an explanatory message.
 - **`npm install`** is only needed if you want to pre-generate renders (see [caching](#speed-caching-and-pre-rendering)).
 
 ---
@@ -138,6 +140,7 @@ Gemini acts on the app through tools: list sites, select a site, fly the camera,
 | `⌘K` | focus the command bar |
 | `Shift+R` | reset demo |
 | `Esc` | close popovers |
+| `?` button | help guide |
 
 ---
 
@@ -297,8 +300,8 @@ These are **indicative figures for a demo**, not engineering advice.
 |---|---|---|
 | City model, suitability grid, 8 sites, infrastructure (`data/build/`) | ✅ bundled | ✅ bundled |
 | Basemap tiles | streamed from OpenFreeMap | streamed from OpenFreeMap |
-| Concept renders | ⏳ live, ~15 s (background pre-rendering starts when you pick a site) | ✅ sites A–H at the default design, dusk |
-| Omni flythroughs | ⏳ live, ~50 s | ✅ sites A–H, any design (nearest site's video for custom cells) |
+| Concept renders | ⏳ live, ~15 s (starts in the background when you pick a site). **Needs billing** on the key's project; otherwise the live massing snapshot is shown | ✅ sites A–H at the default design, dusk |
+| Omni flythroughs | ⏳ live, ~50 s. **Needs billing** on the key's project | ✅ sites A–H, any design (nearest site's video for custom cells) |
 | Compliance, stakeholder brief, community letter, investor memo | ⏳ live, ~6–11 s each | ✅ sites A, D, F, G |
 | Site Scout ranking | ⏳ live, ~7 s | ✅ |
 | Chat and voice | always live | always live |
@@ -359,21 +362,23 @@ export default {
 ```
 
 **Where the Gemini key comes from** (first match wins):
-1. `config.local.js`
-2. `?key=…` in the URL
-3. a key entered via the **Gemini** pill (remembered in that browser)
-4. the built-in `HACKATHON_KEY`
+1. `?key=…` in the URL (remembered in that browser)
+2. a key entered via the **Gemini** pill (remembered in that browser)
+3. `config.local.js`. On GitHub Pages this file is generated at deploy time from the `GEMINI_KEY` repository secret.
 
-The built-in key is public on purpose so the hosted demo works. Rotate it after the event. If Google disables it, supply a new key in any of the first three ways.
+`MODELS.textFallbacks` in `config.js` lists the models tried, in order, when the main text model is busy (503), out of quota (429), or times out. A failing model is skipped for 5 minutes.
 
 ---
 
 ## Deploying
 
-**GitHub Pages** (already set up): every push to `main` redeploys https://angyuqian.github.io/monolith/ within about a minute.
-- `.nojekyll` makes Pages serve the files as-is.
-- On `*.github.io` the app skips `config.local.js` and the local render cache, which don't exist there.
-- The microphone works because Pages uses HTTPS.
+**GitHub Pages** (already set up): `.github/workflows/pages.yml` redeploys https://angyuqian.github.io/monolith/ on every push to `main`, in about a minute.
+- **Key:** the workflow writes `config.local.js` into the deployed copy from the **`GEMINI_KEY` repository secret**, so visitors need no setup and the key never enters the repo.
+  - To change the key: `gh secret set GEMINI_KEY -R angyuqian/monolith`, then re-run the workflow (Actions tab → *Deploy to GitHub Pages* → *Run workflow*).
+  - It's still readable in the browser, as every client-side key is. Consider restricting it to the Pages and localhost addresses in Google Cloud Console → Credentials.
+- **Cache:** the local render cache doesn't exist on Pages, so it's skipped there.
+- **Microphone:** works because Pages uses HTTPS.
+- **Help:** a first-time visitor sees the Help guide; it's always available from **?** in the top bar.
 
 **Any other static host** (Firebase Hosting, Cloud Storage, Netlify) works the same way: upload the folder.
 
@@ -389,7 +394,9 @@ The built-in key is public on purpose so the hosted demo works. Rotate it after 
 | Renders are slow | They're live: the design differs from the pre-rendered version, or there's no local cache. Background pre-rendering starts about 4 s after the design settles. |
 | Console: `Expected value to be of type number, but found null` | Harmless. It comes from the OpenFreeMap basemap style. |
 | Console: 404 for `data/cache/manifest.json` or `config.local.js` (locally) | Harmless. There's no local cache or local config yet, so it uses defaults and generates live. |
-| Hosted site suddenly shows canned AI output | The shared key may have been disabled. Open the site with `?key=NEW_KEY`, or click the Gemini pill. |
+| Toast: *"this Gemini key's plan has no quota for it (enable billing)"* | Renders and flythroughs need billing on the key's Google Cloud project (free tier = 0). Text and voice still work. |
+| Console: *"gemini-3.8-flash unavailable (503); trying the next model"* | Google's model is busy. The app switched to a fallback model automatically; nothing to do. |
+| AI suddenly shows canned output everywhere | The key may have been disabled or revoked. Create a new one, update `config.local.js` and the `GEMINI_KEY` secret, or use `?key=` / the Gemini pill. |
 
 ---
 
