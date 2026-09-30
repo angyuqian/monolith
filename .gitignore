@@ -4,3 +4,5 @@ data/sg_buildings_v5.geojson
 node_modules/
 # local secrets (see config.local.example.js)
 config.local.js
+# design reference screenshots (kept locally, not in the repo)
+Screenshot*.png
