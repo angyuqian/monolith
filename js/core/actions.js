@@ -33,12 +33,9 @@ export function createActions(adapter, getCtx) {
         ? sites.find((s) => s.id === siteOrId || s.name.toLowerCase().includes(siteOrId.toLowerCase()))
         : siteOrId;
       if (!site) return null;
-      // A different site starts from the default design (which is what the render cache covers);
-      // re-selecting the same site keeps the current edits.
-      const sameSite = store.get().site?.id === site.id;
       store.set({ site });
       if (fly) adapter.flyTo({ lng: site.lng, lat: site.lat, zoom: 16.6, pitch: 60, bearing: -28 });
-      rebuildDesign(sameSite && store.get().design ? store.get().design.params : DEFAULT_PARAMS);
+      rebuildDesign(store.get().design?.params || DEFAULT_PARAMS);
       bus.emit(EVENTS.SITE_SELECTED, site);
       return site;
     },
